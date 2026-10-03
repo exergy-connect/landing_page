@@ -18,8 +18,10 @@
     .closing{border-top:1px solid var(--line);padding:58px 0 65px;display:flex;justify-content:space-between;align-items:flex-end;gap:35px}.closing h2{font-size:clamp(32px,4vw,53px);font-weight:400;line-height:1.12;letter-spacing:-.045em;margin:19px 0 0}.contact{font-size:15px;text-decoration:none;border-bottom:1px solid var(--ink);padding:0 0 11px;white-space:nowrap}.contact:hover{color:var(--accent);border-color:var(--accent)}footer{border-top:1px solid var(--line);padding:25px 0 30px;display:flex;justify-content:space-between;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.08em;color:var(--muted)}a:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
     .closing h2 .accent{color:var(--accent)}
     .hero h1 .rainbow,.closing h2 .rainbow{background:linear-gradient(to right,#ff5b5b 0%,#ff9d43 25%,#ffe45c 50%,#55d68b 75%,#599bff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .closing h2 .rainbow.color-cycle{animation:color-cycle 2.4s linear 1}
+    @keyframes color-cycle{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}
     @media(min-width:1600px){.wrap{padding:0 95px}}@media(max-width:760px){.wrap{padding:0 6%}header{height:110px;grid-template-columns:1fr auto;gap:8px;padding:14px 0}.nav{grid-row:2;grid-column:1 / -1;justify-content:flex-end}.logo-link{grid-column:2;grid-row:1}.brand{font-size:16px}.brand-logo{width:40px;height:40px}.nav{gap:20px;font-size:12px}.hero{padding:42px 0}.hero h1{font-size:clamp(49px,10vw,76px);margin:30px 0}.hero p{font-size:16px;max-width:270px}.scroll{display:none}.process{padding:23px 22px}.process-flow{grid-template-columns:1fr;gap:35px;margin:28px 0 37px}.endpoint{font-size:30px}.endpoint:last-child{justify-content:flex-end}.bridge{margin:0 15px}.orb{width:35px;height:35px}.steps{top:9px}.process-top .eyebrow:last-child{display:none}.idea{grid-template-columns:1fr;gap:28px;padding:55px 0}.idea h2{font-size:30px}.idea p{font-size:16px}.example{padding:50px 0}.example-layout{grid-template-columns:1fr;gap:24px;margin-top:30px}.example h2{font-size:54px}.example-copy p{max-width:none}.result{flex-direction:column;gap:12px;margin-top:33px}.result p{font-size:19px}.closing{padding:40px 0;align-items:flex-start;flex-direction:column}.closing h2{font-size:37px}footer{font-size:9px}.netom{font-size:9px}.section-label{gap:15px}}
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.closing h2 .rainbow.color-cycle{animation:none}}
   </style>
 </head>
 <body>
@@ -56,5 +58,17 @@
     </main>
     <footer><span>© 2026 EXERGY LLC</span><span>Possibility → Capability</span></footer>
   </div>
+  <script>
+    const closingWord = document.querySelector('.closing .rainbow');
+    if (closingWord && 'IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.75)) {
+          closingWord.classList.add('color-cycle');
+          observer.disconnect();
+        }
+      }, { threshold: 0.75 });
+      observer.observe(closingWord);
+    }
+  </script>
 </body>
 </html>
