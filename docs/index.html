@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Exergy ∞ Connect helps create capabilities that give organizations a meaningful, durable technical advantage. Sustainable differentiated capability.">
+  <meta name="theme-color" content="#05080f">
+  <title>Exergy ∞ Connect — Sustainable differentiated capability</title>
+  <style>
+    :root{--paper:#05080f;--ink:#f1f3f7;--muted:#9aa8bc;--line:#243145;--accent:#779dd5;--light:#0d1625}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit}::selection{background:#355b90;color:#fff}
+    .wrap{max-width:1440px;margin:auto;padding:0 7.2%}header{height:112px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;text-decoration:none;font-size:24px;letter-spacing:-.035em;white-space:nowrap}.brand-logo{width:64px;height:64px;object-fit:contain;margin-right:12px;flex-shrink:0}.brand-symbol{color:var(--accent);margin:0 .3em}.nav{display:flex;gap:36px;font-size:13px}.nav a{text-decoration:none}.nav a:hover{color:var(--accent)}.arrow{display:inline-block;margin-left:12px}
+    .eyebrow{font-family:'Courier New',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.13em;line-height:1.6;color:var(--muted)}.status{display:flex;align-items:center;gap:9px}.dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+    .hero{padding:65px 0 68px;position:relative}.hero h1{font-size:clamp(58px,7.8vw,110px);line-height:1.01;letter-spacing:-.065em;font-weight:400;margin:34px 0 36px;max-width:1050px}.hero h1 span{color:var(--accent)}.hero-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:25px}.hero p{font-size:19px;line-height:1.55;max-width:340px;margin:0}.scroll{font-size:11px;letter-spacing:.1em;text-decoration:none;text-transform:uppercase;font-family:'Courier New',monospace}
+    .process{position:relative;background:var(--light);border:1px solid #24364f;padding:33px 42px 30px;overflow:hidden}.process:before{content:'';position:absolute;inset:0;background-image:radial-gradient(#52729f 0.65px,transparent .65px);background-size:16px 16px;opacity:.35;pointer-events:none}.process-top,.process-flow,.process-bottom{position:relative}.process-top{display:flex;justify-content:space-between}.process-flow{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:28px;align-items:center;margin:35px 0 30px}.endpoint{display:flex;align-items:center;gap:17px;font-size:clamp(23px,3vw,38px);letter-spacing:-.045em}.endpoint:last-child{justify-content:flex-end}.orb{width:48px;height:48px;flex-shrink:0;border-radius:50%;border:1px dashed #779dd5}.orb.solid{border:1px solid var(--accent);background:var(--accent);box-shadow:inset 0 0 0 7px var(--light),inset 0 0 0 8px var(--accent)}.bridge{position:relative;height:1px;background:#527bb4}.bridge:after{position:absolute;content:'';right:0;top:-4px;width:8px;height:8px;border-top:1px solid #527bb4;border-right:1px solid #527bb4;transform:rotate(45deg)}.steps{position:absolute;left:0;right:0;top:13px;text-align:center;font-family:'Courier New',monospace;font-size:11px;color:var(--accent);white-space:nowrap}.process-bottom{font-family:'Courier New',monospace;font-size:10px;letter-spacing:.05em;color:var(--muted)}
+    .idea{display:grid;grid-template-columns:1fr 2fr;gap:55px;padding:90px 0;border-bottom:1px solid var(--line)}.section-label{display:flex;gap:22px}.section-label .number{color:#74859e}.idea h2{font-size:clamp(27px,3vw,40px);font-weight:400;line-height:1.25;letter-spacing:-.035em;margin:0 0 25px;max-width:660px}.idea p{font-size:17px;line-height:1.7;color:var(--muted);max-width:610px;margin:0 0 20px}.idea p:last-child{color:var(--ink);margin-bottom:0}
+    .example{padding:75px 0 85px}.example-heading{display:flex;justify-content:space-between;align-items:center}.netom{border:1px solid var(--line);padding:8px 12px;font-size:10px}.example-layout{display:grid;grid-template-columns:1fr 1fr;gap:90px;margin-top:44px}.example h2{font-size:clamp(50px,5.5vw,74px);font-weight:400;letter-spacing:-.055em;line-height:1.1;margin:0 0 25px}.example-copy p{font-size:17px;color:var(--muted);line-height:1.7;max-width:405px;margin:0 0 22px}.example-copy p.lead{color:var(--ink);font-size:20px;line-height:1.5}.capabilities{list-style:none;margin:0;padding:0}.capabilities li{border-bottom:1px solid var(--line);padding:17px 0;display:flex;gap:23px;align-items:center;font-size:16px}.capabilities li:first-child{border-top:1px solid var(--line)}.capabilities span{font-family:'Courier New',monospace;font-size:10px;color:var(--accent)}.result{margin-top:46px;display:flex;gap:24px;align-items:flex-start;border-left:2px solid var(--accent);padding:0 0 0 25px}.result p{font-size:21px;line-height:1.5;letter-spacing:-.015em;margin:0;max-width:830px}.result .eyebrow{flex-shrink:0;padding-top:6px}
+    .closing{border-top:1px solid var(--line);padding:58px 0 65px;display:flex;justify-content:space-between;align-items:flex-end;gap:35px}.closing h2{font-size:clamp(32px,4vw,53px);font-weight:400;line-height:1.12;letter-spacing:-.045em;margin:19px 0 0}.contact{font-size:15px;text-decoration:none;border-bottom:1px solid var(--ink);padding:0 0 11px;white-space:nowrap}.contact:hover{color:var(--accent);border-color:var(--accent)}footer{border-top:1px solid var(--line);padding:25px 0 30px;display:flex;justify-content:space-between;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.08em;color:var(--muted)}a:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
+    @media(min-width:1600px){.wrap{padding:0 95px}}@media(max-width:760px){.wrap{padding:0 6%}header{height:85px}.brand{font-size:16px}.brand-logo{width:40px;height:40px;margin-right:8px}.nav{gap:20px;font-size:12px}.hero{padding:42px 0}.hero h1{font-size:clamp(49px,10vw,76px);margin:30px 0}.hero p{font-size:16px;max-width:270px}.scroll{display:none}.process{padding:23px 22px}.process-flow{grid-template-columns:1fr;gap:35px;margin:28px 0 37px}.endpoint{font-size:30px}.endpoint:last-child{justify-content:flex-end}.bridge{margin:0 15px}.orb{width:35px;height:35px}.steps{top:9px}.process-top .eyebrow:last-child{display:none}.idea{grid-template-columns:1fr;gap:28px;padding:55px 0}.idea h2{font-size:30px}.idea p{font-size:16px}.example{padding:50px 0}.example-layout{grid-template-columns:1fr;gap:24px;margin-top:30px}.example h2{font-size:54px}.example-copy p{max-width:none}.result{flex-direction:column;gap:12px;margin-top:33px}.result p{font-size:19px}.closing{padding:40px 0;align-items:flex-start;flex-direction:column}.closing h2{font-size:37px}footer{font-size:9px}.netom{font-size:9px}.section-label{gap:15px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="#" aria-label="Exergy ∞ Connect home"><img class="brand-logo" src="images/exergy_connect_logo.png" alt="" width="100" height="100">Exergy <span class="brand-symbol" aria-hidden="true">∞</span> Connect</a>
+      <nav class="nav" aria-label="Main navigation"><a href="#idea">The idea</a><a href="#example">In practice <span class="arrow" aria-hidden="true">↗</span></a></nav>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="headline">
+        <div class="eyebrow status"><span class="dot" aria-hidden="true"></span> From possibility to capability</div>
+        <h1 id="headline">Sustainable<br>differentiated<br><span>capability.</span></h1>
+        <div class="hero-bottom"><p>Turning technical potential into<br>something you can actually do.</p><a class="scroll" href="#idea">Explore the idea <span class="arrow" aria-hidden="true">↓</span></a></div>
+      </section>
+      <div class="process" role="img" aria-label="Potential becomes capability through a repeated process: model, build, test, learn.">
+        <div class="process-top"><span class="eyebrow">The work of Exergy ∞ Connect</span><span class="eyebrow">A continuous process</span></div>
+        <div class="process-flow"><div class="endpoint"><span class="orb" aria-hidden="true"></span>Potential</div><div class="bridge"><span class="steps">model → build → test → learn</span></div><div class="endpoint">Capability<span class="orb solid" aria-hidden="true"></span></div></div>
+        <div class="process-bottom">Make it possible. Make it work. Keep it working.</div>
+      </div>
+      <section class="idea" id="idea" aria-labelledby="idea-title">
+        <div class="section-label eyebrow"><span class="number">01 /</span> The idea</div>
+        <div><h2 id="idea-title">Technology is increasingly<br>available to everyone.<br>Capability is where you differentiate.</h2><p>The advantage is in what an organization can make possible with that technology — and whether that capability can be sustained and extended.</p><p>Exergy ∞ Connect works on the path from possibility to capability, helping create a meaningful, durable technical advantage.</p></div>
+      </section>
+      <section class="example" id="example" aria-labelledby="example-title">
+        <div class="example-heading"><div class="section-label eyebrow"><span class="number">02 /</span> In practice</div><span class="eyebrow netom">With Netom</span></div>
+        <div class="example-layout">
+          <div class="example-copy"><h2 id="example-title">EVPN, properly.</h2><p class="lead"><strong>AI fabrics are moving toward open, programmable Ethernet fabrics at scale.</strong></p><p>Exergy ∞ Connect is helping Netom become part of that transition, starting with EVPN monitoring.</p><p>The interesting part isn't simply implementing EVPN. It is creating the means to test it, understand it, and make it better.</p></div>
+          <ol class="capabilities"><li><span>01</span>Test it at scale</li><li><span>02</span>Test across vendors</li><li><span>03</span>Expose integration problems quickly</li><li><span>04</span>Understand what is actually happening</li><li><span>05</span>Determine what needs to change</li><li><span>06</span>Validate the result</li></ol>
+        </div>
+        <div class="result"><span class="eyebrow">The result</span><p><strong>A landing zone for the AI fabric market — and a foundation for what follows.</strong></p></div>
+      </section>
+      <section class="closing" aria-labelledby="closing-title"><div><div class="eyebrow">Potential, realized.</div><h2 id="closing-title">Sustainable<br>differentiated capability.</h2></div><a class="contact" href="mailto:exergy.connect@gmail.com">Get in touch <span class="arrow" aria-hidden="true">↗</span></a></section>
+    </main>
+    <footer><span>© 2026 EXERGY LLC</span><span>Possibility → Capability</span></footer>
+  </div>
+</body>
+</html>
