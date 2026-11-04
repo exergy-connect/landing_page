@@ -1,0 +1,131 @@
+---
+id: "ebgp-icmp"
+title: "eBGP ICMP"
+summary: "Two Linux JS hosts behind two WASM BGP routers; client-to-client ICMP after route learning."
+eyebrow: "EXERGY-LAB.NET LAB 02"
+headline: "eBGP with client ping"
+
+# Two emulated clients behind two eBGP virtual routers.
+# client1 -- r1 (AS 65001) --eBGP-- r2 (AS 65002) -- client2
+# Browser: device:frr → JS+WASM BGP; device:linux → pure-JS host (ICMP after FIB).
+
+_id: ebgp-icmp
+
+topology:
+  _concept: topology
+  device: frr
+  module: [bgp]
+  name: ebgp-icmp
+
+  nodes:
+    r1:
+      device: frr
+      bgp:
+        as: 65001
+    r2:
+      device: frr
+      bgp:
+        as: 65002
+    client1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping client2
+            type: ping
+            target: client2
+            count: 3
+          - label: MRC write to client2
+            type: mrc
+            role: sender
+            target: client2
+            qp: 1
+            bytes: 1048576
+            paths: 8
+            packetBytes: 4096
+            rateBps: 100000000000
+            congestionControl: nscc
+            ecn: true
+            ecnThresholdBytes: 262144
+    client2:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - type: mrc
+            role: receiver
+            qp: 1
+            bufferBytes: 67108864
+
+  links: [ r1-r2, client1-r1, r2-client2 ]
+
+  # Steps run in order. A step is either device state that must already hold,
+  # or a packet to send plus the response that must come back.
+  # ASN, prefix, address, and nexthop values can name a node instead of a
+  # literal, so the checks follow the lab if its addressing changes:
+  # r2.asn, client1.prefix, client2.ipv4, r1.ipv4.client1.
+  validate:
+    - label: eBGP session is up
+      state:
+        - node: r1
+          bgp:
+            - peer: r2
+              asn: r2.asn
+              state: established
+        - node: r2
+          bgp:
+            - peer: r1
+              asn: r1.asn
+              state: established
+    - label: r1 has both client subnets
+      state:
+        - node: r1
+          routes:
+            - prefix: client1.prefix
+              protocol: connected
+            - prefix: client2.prefix
+              protocol: bgp
+              nexthop: r2.ipv4.r1
+    - label: r2 has both client subnets
+      state:
+        - node: r2
+          routes:
+            - prefix: client2.prefix
+              protocol: connected
+            - prefix: client1.prefix
+              protocol: bgp
+              nexthop: r1.ipv4.r2
+    - label: hosts have a default toward their router
+      state:
+        - node: client1
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: static
+              nexthop: r1.ipv4.client1
+        - node: client2
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: static
+              nexthop: r2.ipv4.client2
+    - label: client1 reaches client2
+      packet:
+        from: client1
+        type: icmp-echo
+        target: client2.ipv4
+        expect:
+          type: icmp-echo-reply
+          from: client2
+    - label: client1 completes an MRC RDMA Write
+      mrc:
+        sender: client1
+        receiver: client2
+        qp: 1
+        bytes: 1048576
+        paths: 8
+        congestionControl: nscc
+        ecn: true
+        expect:
+          minPaths: 1
+          maxRetransmissions: 0
+          maxEcnMarkedPackets: 0
+---

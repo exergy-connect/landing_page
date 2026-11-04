@@ -1,0 +1,46 @@
+---
+id: "fabric"
+title: "Leaf-and-spine fabric"
+summary: "Two leaves and two spines. The fabric module builds the underlay, and eBGP carries each host subnet to the other leaf."
+eyebrow: "EXERGY-LAB.NET LAB 08"
+headline: "Leaf-and-spine fabric"
+
+# Leaf-and-spine eBGP. The fabric module creates the spines, the leaves, and
+# the underlay. Each host link names who connects to whom. Subnets, defaults,
+# and the prefix each leaf originates are derived. h1 reaches h2 across a spine.
+
+_id: fabric
+
+topology:
+  _concept: topology
+  name: fabric
+  device: frr
+  module: [bgp, fabric]
+
+  fabric:
+    spines: 2
+    leafs: 2
+    spine:
+      bgp:
+        as: 65100
+    leaf:
+      bgp:
+        as: "{65000 + count}"
+
+  nodes:
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: h2
+    h2:
+      device: linux
+      role: host
+
+  links:
+    - h1-L1
+    - h2-L2
+---

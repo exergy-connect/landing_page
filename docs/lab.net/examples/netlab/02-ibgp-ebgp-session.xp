@@ -1,0 +1,110 @@
+---
+id: "netlab-02-ibgp-ebgp-session"
+title: "Netlab: iBGP and eBGP sessions"
+summary: "DUT peers with x1 in AS 65000 and x2 in AS 65100; validates OSPF, beacon propagation, and iBGP next-hop-self."
+headline: "iBGP, eBGP, and next-hop-self"
+
+# Adapted from netlab/tests/integration/bgp/02-ibgp-ebgp-session.yml.
+# Baseline IPv4 iBGP/eBGP and next-hop-self on DUT's iBGP session.
+# Uses interface-based iBGP (permitted by the original test), without the
+# Netlab test harness, platform adjustments, or passive-session plugin.
+
+_id: netlab-02-ibgp-ebgp-session
+
+topology:
+  _concept: topology
+  name: netlab-02-ibgp-ebgp-session
+  device: frr
+  module: [bgp, ospf]
+
+  nodes:
+    dut:
+      loopback:
+        ipv4: 10.0.0.1/32
+      ospf:
+        router_id: 10.0.0.1
+        hello_interval: 1
+        dead_interval: 3
+      bgp:
+        as: 65000
+        neighbors:
+          - name: x1
+            next_hop_self: ebgp
+    x1:
+      loopback:
+        ipv4: 10.0.0.2/32
+      ospf:
+        router_id: 10.0.0.2
+        hello_interval: 1
+        dead_interval: 3
+      bgp:
+        as: 65000
+    x2:
+      loopback:
+        ipv4: 172.42.42.1/24
+      ospf: false
+      bgp:
+        as: 65100
+        advertise:
+          - ipv4: 172.42.42.0/24
+
+  links:
+    - type: p2p
+      interfaces:
+        - node: dut
+          ifname: eth1
+          ipv4: 10.1.0.1/30
+        - node: x1
+          ifname: eth1
+          ipv4: 10.1.0.2/30
+    - type: p2p
+      interfaces:
+        - node: dut
+          ifname: eth2
+          ipv4: 10.1.0.5/30
+        - node: x2
+          ifname: eth1
+          ipv4: 10.1.0.6/30
+
+  validate:
+    - label: DUT sends no OSPF packets toward x2
+      state:
+        - node: dut
+          traffic:
+            - ifname: eth2
+              protocol: OSPF
+              sent: 0
+    - label: OSPF reaches DUT's loopback from x1
+      state:
+        - node: x1
+          routes:
+            - prefix: dut.loopback
+              protocol: ospf
+              nexthop: dut.ipv4.x1
+    - label: iBGP and eBGP sessions with DUT are established
+      state:
+        - node: x1
+          bgp:
+            - peer: dut
+              asn: 65000
+              state: established
+        - node: x2
+          bgp:
+            - peer: dut
+              asn: 65000
+              state: established
+    - label: DUT propagates x2's beacon prefix to x1
+      state:
+        - node: x1
+          routes:
+            - prefix: 172.42.42.0/24
+              protocol: bgp
+              aspath: '65100'
+    - label: DUT sets itself as the iBGP next hop
+      state:
+        - node: x1
+          routes:
+            - prefix: 172.42.42.0/24
+              protocol: bgp
+              nexthop: dut.ipv4.x1
+---

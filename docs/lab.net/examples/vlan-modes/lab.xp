@@ -1,0 +1,129 @@
+---
+id: "vlan-modes"
+title: "VLAN modes"
+summary: "Bridged, IRB, and routed VLANs: staff hosts share a bridge, app1 routes through an IRB, and the WAN is a tagged /30."
+eyebrow: "EXERGY-LAB.NET LAB 03"
+headline: "Bridged, IRB, and routed VLANs"
+
+# VLAN module: bridged staff, IRB apps, routed WAN.
+# h1 and h2 share a bridge VLAN on sw1 (L2 only).
+# app1 sits in an IRB VLAN; r1 routes it through irb20.
+# r1—r2 is a routed VLAN (tagged /30, no bridging). client pings app1 after BGP.
+
+_id: vlan-modes
+
+topology:
+  _concept: topology
+  name: vlan-modes
+  module: [vlan, bgp]
+  device: frr
+
+  vlans:
+    staff:
+      id: 10
+      mode: bridge
+      prefix:
+        ipv4: 192.168.10.0/24
+    apps:
+      id: 20
+      mode: irb
+      prefix:
+        ipv4: 192.168.20.0/24
+    wan:
+      id: 30
+      mode: route
+      prefix:
+        ipv4: 10.30.0.0/24
+
+  nodes:
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: 192.168.10.11
+    h2:
+      device: linux
+      role: host
+    app1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping client
+            type: ping
+            target: 10.1.3.2
+    sw1:
+      device: switch
+      role: switch
+    r1:
+      device: frr
+      bgp:
+        as: 65001
+        router_id: 10.30.0.1
+        advertise:
+          - ipv4: 192.168.20.0/24
+    r2:
+      device: frr
+      bgp:
+        as: 65002
+        router_id: 10.30.0.2
+        advertise:
+          - ipv4: 10.1.3.0/30
+    client:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: 10.1.3.1
+      validation:
+        actions:
+          - label: ping app1
+            type: ping
+            target: 192.168.20.10
+
+  links:
+    - vlan.access: staff
+      interfaces:
+        - node: h1
+          ifname: eth1
+        - node: sw1
+          ifname: eth1
+    - vlan.access: staff
+      interfaces:
+        - node: h2
+          ifname: eth1
+        - node: sw1
+          ifname: eth2
+    - vlan.access: apps
+      interfaces:
+        - node: app1
+          ifname: eth1
+        - node: sw1
+          ifname: eth3
+    - vlan.trunk: [apps]
+      interfaces:
+        - node: sw1
+          ifname: eth4
+        - node: r1
+          ifname: eth1
+    - vlan.access: wan
+      interfaces:
+        - node: r1
+          ifname: eth2
+        - node: r2
+          ifname: eth1
+    - interfaces:
+        - node: r2
+          ifname: eth2
+          ipv4: 10.1.3.1/30
+        - node: client
+          ifname: eth1
+          ipv4: 10.1.3.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.3.0/30
+---

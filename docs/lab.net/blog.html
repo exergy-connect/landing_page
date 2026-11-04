@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore a live eBGP lab: two autonomous systems, two clients, and one connected network.">
+  <title>Connecting two networks with eBGP · Exergy-lab.net</title>
+  <style>
+    :root { color-scheme:dark; font:16px/1.65 system-ui,sans-serif; color:#e8eef8; background:#090f19; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(ellipse at 80% 0,#16313566,transparent 55%); }
+    main { width:min(1080px,calc(100% - 40px)); margin:auto; padding:28px 0 40px; }
+    nav { display:flex; justify-content:space-between; align-items:center; padding-bottom:22px; border-bottom:1px solid #ffffff16; }
+    a { color:#6ee7ce; text-underline-offset:4px; }
+    nav a { text-decoration:none; font-weight:700; letter-spacing:-.03em; }
+    nav span,.eyebrow { color:#91a4b9; font:11px/1.5 ui-monospace,monospace; letter-spacing:.12em; text-transform:uppercase; }
+    header { max-width:760px; margin:36px 0 26px; }
+    .eyebrow { color:#6ee7ce; margin:0 0 12px; }
+    h1 { font-size:clamp(30px,5vw,48px); letter-spacing:-.045em; line-height:1.12; margin:0 0 18px; font-weight:650; }
+    .intro { color:#a9b8ca; font-size:17px; margin:0; max-width:650px; }
+    .lab-heading { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    h2 { margin:0; font-size:15px; font-weight:600; }
+    .lab-heading span { font:11px ui-monospace,monospace; color:#91a4b9; }
+    lab-embed { --lab-color:#dce8f5; --lab-node:#17283b; --lab-link:#56bea9; --lab-border:#2a3b50; --lab-background:#0e1827; }
+    .hint { margin:14px 0 0; color:#91a4b9; font-size:13px; }
+    .readouts { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0; }
+    .readout { min-width:0;padding:16px;border:1px solid #2a3b50;border-radius:12px;background:#0e1827; }
+    .readout span { display:block;color:#91a4b9;font-size:12px; }
+    .readout strong { display:block;font-size:18px;font-weight:600;overflow-wrap:anywhere; }
+    #experiment { border-top:1px solid #ffffff16;margin-top:24px;padding-top:20px; }
+    #experiment p { color:#a9b8ca;font-size:14px; }
+    #ping { border:1px solid #6ee7ce;background:#6ee7ce;color:#09241f;padding:10px 16px;border-radius:8px;font:600 14px system-ui;cursor:pointer; }
+    #ping:disabled { opacity:.45;cursor:default; }
+    #ping-result { margin-left:12px;font-size:13px; }
+    #bgp-exchange { display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none;font:12px/1.5 ui-monospace,monospace; }
+    #bgp-exchange li { padding:8px 12px;border:1px solid #2a3b50;border-radius:8px;background:#0e1827; }
+    #bgp-exchange span { display:block;color:#6ee7ce; }
+    #events { padding:0;list-style:none;font:12px/1.7 ui-monospace,monospace;color:#a9b8ca; }
+    #events li { border-bottom:1px solid #ffffff0a;padding:5px 0; }
+    @media(max-width:760px) { .readouts{grid-template-columns:1fr}.readout{padding:12px}#ping-result{display:block;margin:10px 0} }
+    footer { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:28px; padding-top:18px; border-top:1px solid #ffffff16; font-size:12px; color:#91a4b9; }
+    @media(max-width:540px) { main{width:calc(100% - 28px);padding-top:18px}header{margin-top:28px}nav span{font-size:9px}.intro{font-size:15px} }
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="Main"><a href="./index.html">Exergy-lab.net<span aria-hidden="true" style="color:#6ee7ce"> /</span></a><span>Networks you can run</span></nav>
+    <article>
+      <header>
+        <p class="eyebrow">Routing lab / 02</p>
+        <h1>Connecting two networks with eBGP</h1>
+        <p class="intro">Two clients. Two autonomous systems. One path between them. Start the lab to watch the routers establish an eBGP session and learn each other’s networks.</p>
+      </header>
+      <section aria-labelledby="topology-heading">
+        <div class="lab-heading"><h2 id="topology-heading">Interactive topology</h2><span>4 nodes · 3 links · eBGP</span></div>
+        <div class="readouts" aria-label="Live network state">
+          <div class="readout"><span>Simulation</span><strong id="simulation">Loading…</strong></div>
+          <div class="readout"><span>Router peering</span><strong id="peering">Not started</strong></div>
+          <div class="readout"><span>Routes installed</span><strong id="routes">—</strong></div>
+        </div>
+        <lab-embed src="./examples/ebgp-icmp/lab.xp"></lab-embed>
+        <p class="hint">Press Start to bring up the network. Disable a link to explore how the topology responds, or pause and reset to try again.</p>
+      </section>
+      <section id="experiment" aria-labelledby="experiment-heading">
+        <h2 id="experiment-heading">Can client1 reach client2?</h2>
+        <p>The routers must learn a route to the remote client subnet before traffic can cross both autonomous systems. Start the lab, send a ping, then disable the middle link and try again. Packet badges show traffic emitted by the simulation.</p>
+        <button id="ping" disabled>Ping client2</button><output id="ping-result" aria-live="polite">Start the lab to test connectivity.</output>
+        <h2 style="margin-top:24px">BGP exchange</h2>
+        <p>The simulation establishes the session immediately. Each message is replayed individually on the link; the exchange stays here so you can inspect it.</p>
+        <ol id="bgp-exchange" aria-label="BGP message history"><li>Start the lab to see OPEN, KEEPALIVE, and UPDATE messages.</li></ol>
+        <h2 style="margin-top:24px">Live activity</h2>
+        <ol id="events" aria-label="Recent network events"><li>Waiting for the lab to start.</li></ol>
+      </section>
+    </article>
+    <footer><span>Runs locally in your browser.</span><a href="./examples/ebgp-icmp/lab.xp">View lab source ↗</a></footer>
+  </main>
+  <script type="module" src="./blog.js"></script>
+</body>
+</html>

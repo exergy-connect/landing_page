@@ -1,0 +1,81 @@
+---
+id: "bgp-confederation"
+title: "BGP confederation"
+summary: "Member ASes 65001–65003 sit inside confederation 65000. External peers see one AS, and the AS path of the far loopback is 65000 plus the origin AS."
+eyebrow: "EXERGY-LAB.NET LAB 15"
+headline: "BGP confederation"
+
+message: |
+  BGP confederation 65000 with member ASes 65001, 65002, and 65003.
+  x1 and x2 are outside the confederation. External AS paths hide the
+  member ASes and show 65000.
+
+name: bgp-confederation
+module: [ bgp ]
+
+addressing:
+  loopback:
+    ipv6: 2001:db8:1::/48
+  lan:
+    ipv6: 2001:db8:2::/48
+  p2p:
+    ipv6: 2001:db8:3::/48
+
+groups:
+  probes:
+    device: frr
+    members: [ x1, x2, r2, r3 ]
+
+bgp.confederation:
+  65000:
+    members: [ 65001, 65002, 65003 ]
+
+nodes:
+  dut:
+    role: router
+    bgp.as: 65001
+  r2:
+    bgp.as: 65002
+  r3:
+    bgp.as: 65003
+  x1:
+    bgp.as: 65100
+  x2:
+    bgp.as: 65101
+
+links: [ dut-x1, dut-r2, r2-r3, r3-x2 ]
+
+validate:
+  ipv4_ebgp:
+    description: IPv4 EBGP sessions with DUT should be established
+    nodes: [ x1, r2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut')
+  ipv6_ebgp:
+    description: IPv6 EBGP sessions with DUT should be established
+    nodes: [ x1, r2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',af='ipv6')
+  x1_lb_v4:
+    description: Check for IPv4 X1 loopback on X2
+    nodes: [ x2 ]
+    plugin: bgp_prefix(nodes.x1.loopback.ipv4,af='ipv4')
+  x1_lb_v6:
+    description: Check for IPv6 X1 loopback on X2
+    nodes: [ x2 ]
+    plugin: bgp_prefix(nodes.x1.loopback.ipv6,af='ipv6')
+  x2_lb_v4:
+    description: Check for IPv4 X2 loopback on X1
+    nodes: [ x1 ]
+    plugin: bgp_prefix(nodes.x2.loopback.ipv4,af='ipv4')
+  x2_lb_v6:
+    description: Check for IPv6 X2 loopback on X1
+    nodes: [ x1 ]
+    plugin: bgp_prefix(nodes.x2.loopback.ipv6,af='ipv6')
+  x2_path_v4:
+    description: Check AS path of IPv4 X2 loopback on X1
+    nodes: [ x1 ]
+    plugin: bgp_prefix(nodes.x2.loopback.ipv4,af='ipv4',aspath='65000 65101')
+  x2_path_v6:
+    description: Check AS path of IPv6 X2 loopback on X1
+    nodes: [ x1 ]
+    plugin: bgp_prefix(nodes.x2.loopback.ipv6,af='ipv6',aspath='65000 65101')
+---

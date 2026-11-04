@@ -1,0 +1,102 @@
+---
+# Two-loopback OSPF/iBGP EVPN fabric.
+# Router-to-router links take the p2p pool; true means that family is unnumbered.
+# Interface names, the router role, OSPF area 0, and the VTEP loopback are derived.
+# Node IDs and unallocated router IDs are derived by the loader.
+id: ospf-ibgp
+title: OSPF + iBGP EVPN fabric
+summary: 'Infrahub Arista design: unnumbered OSPF, two loopbacks per router,
+  and an EVPN/VXLAN stretched VLAN.'
+_id: ospf-ibgp
+addressing:
+  loopback:
+    ipv4: 10.10.1.0/25
+    prefix: 32
+  loopback-vtep:
+    ipv4: 10.10.1.128/25
+    prefix: 32
+  p2p:
+    ipv4: true
+    ipv6: true
+  clients:
+    ipv4: 172.25.9.0/24
+    prefix: 24
+topology:
+  _concept: topology
+  layout: tree
+  name: ospf-ibgp
+  device: eos
+  module: [ospf, bgp, vlan, vxlan, evpn]
+  ospf:
+    source_interface: loopbacks[0]
+  bgp:
+    as: 64513
+    source_interface: loopbacks[1]
+  loopbacks:
+    - pool: loopback
+    - pool: loopback-vtep
+  vxlan:
+    flooding: evpn
+  vlans:
+    dc-arista_-_OpsMill_-_production_-_Hypervisor-Management:
+      id: 900
+      mode: bridge
+      vni: 10900
+      pool: clients
+  nodes:
+    dc-arista-spine-01:
+      bgp:
+        rr: true
+    dc-arista-spine-02:
+      bgp:
+        rr: true
+    dc-arista-leaf-01: {}
+    dc-arista-leaf-02: {}
+    dc-arista-leaf-03: {}
+    dc-arista-leaf-04: {}
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: h2
+    h2:
+      device: linux
+      role: host
+  links:
+    - interfaces: [{ node: dc-arista-leaf-01 }, { node: dc-arista-spine-01 }]
+    - interfaces: [{ node: dc-arista-leaf-01 }, { node: dc-arista-spine-02 }]
+    - interfaces: [{ node: dc-arista-leaf-02 }, { node: dc-arista-spine-01 }]
+    - interfaces: [{ node: dc-arista-leaf-02 }, { node: dc-arista-spine-02 }]
+    - interfaces: [{ node: dc-arista-leaf-03 }, { node: dc-arista-spine-01 }]
+    - interfaces: [{ node: dc-arista-leaf-03 }, { node: dc-arista-spine-02 }]
+    - interfaces: [{ node: dc-arista-leaf-04 }, { node: dc-arista-spine-01 }]
+    - interfaces: [{ node: dc-arista-leaf-04 }, { node: dc-arista-spine-02 }]
+    - vlan.access: dc-arista_-_OpsMill_-_production_-_Hypervisor-Management
+      interfaces: [{ node: h1 }, { node: dc-arista-leaf-01 }]
+    - vlan.access: dc-arista_-_OpsMill_-_production_-_Hypervisor-Management
+      interfaces: [{ node: h2 }, { node: dc-arista-leaf-02 }]
+  validate:
+    - label: OSPF reaches the spine loopback
+      state:
+        - node: dc-arista-leaf-01
+          routes:
+            - prefix: dc-arista-spine-01.loopbacks[0].ipv4
+              protocol: ospf
+    - label: leaf-spine BGP is up
+      state:
+        - node: dc-arista-leaf-01
+          bgp:
+            - peer: dc-arista-spine-01
+              state: established
+    - label: h1 reaches h2
+      packet:
+        from: h1
+        type: icmp-echo
+        target: h2.ipv4
+        expect:
+          type: icmp-echo-reply
+          from: h2
+---

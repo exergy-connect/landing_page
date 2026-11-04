@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "labs": [
+    "ai-fabric/lab.xp",
+    "two-router/lab.xp",
+    "ebgp-icmp/lab.xp",
+    "ebgp-icmp/bfd.xp",
+    "vlan-modes/lab.xp",
+    "gateway/lab.xp",
+    "ipv6-ra/lab.xp",
+    "vxlan/lab.xp",
+    "evpn/lab.xp",
+    "fabric/lab.xp",
+    "fabric/ospf-ibgp.xp",
+    "vxlan-evpn-fabric/lab.xp",
+    "qinq-pe/lab.xp",
+    "evpn-mh/lab.xp",
+    "ospf/lab.xp",
+    "isis/lab.xp",
+    "ospfv3/lab.xp",
+    "bgp-confederation/lab.xp",
+    "browser-twin/lab.xp",
+    "srv6/lab.xp",
+    "netlab/02-ibgp-ebgp-session.xp"
+  ],
+  "repos": [
+    {
+      "id": "bgplab-basic",
+      "title": "BGP basic labs",
+      "url": "https://github.com/bgplab/bgplab/tree/master",
+      "include": [
+        "basic/*/topology.yml"
+      ]
+    },
+    {
+      "id": "netlab-integration",
+      "title": "netlab integration",
+      "url": "https://github.com/ipspace/netlab/tree/dev/tests/integration",
+      "include": [
+        "bgp/*.{yml,yaml}",
+        "evpn/*.{yml,yaml}",
+        "evpn.multihoming/*.{yml,yaml}",
+        "gateway/*.{yml,yaml}",
+        "isis/*.{yml,yaml}",
+        "ospf/*/*.{yml,yaml}",
+        "vlan/*.{yml,yaml}",
+        "vxlan/*.{yml,yaml}"
+      ]
+    }
+  ]
+}

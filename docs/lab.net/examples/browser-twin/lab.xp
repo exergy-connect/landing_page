@@ -1,0 +1,54 @@
+---
+id: "browser-twin"
+title: "Browser twin with native FRR"
+summary: "twin1 runs its control plane in this browser and connects through its Exergy-lab.net container to an external FRR peer."
+headline: "Browser twin and native eBGP"
+
+# FRR AS 65001 peers over IPv4 with an Exergy-lab.net browser twin in AS 65002.
+# The Exergy-lab.net container provisions the Linux dataplane; its BGP control plane
+# runs in the browser and reaches FRR through the node's WebSocket dataplane.
+# Compile from the xform repository:
+#   npm run compile -- examples/network_validation/network-validation-fw.xpt \
+#     examples/network_validation/labs/exergy-lab.net/browser-twin.xp \
+#     --final clab.yml --no-execute
+
+_id: browser-twin
+provider: clab
+
+addressing:
+  mgmt:
+    network: lab_mgmt
+    ipv4: 192.168.121.0/24
+    start: 100
+  loopback:
+    ipv4: 10.0.0.0/24
+    prefix: 32
+  p2p:
+    ipv4: 10.1.0.0/16
+    prefix: 31
+
+topology:
+  layout: line
+  module: [bgp]
+  bgp:
+    ipv4: [ebgp]
+    ipv6: false
+
+  nodes:
+    frr1:
+      device:
+        type: frr
+      bgp:
+        as: 65001
+    twin1:
+      device:
+        type: exergy-lab.net
+        ws:
+          port: 4242
+      bgp:
+        as: 65002
+
+  links:
+    - frr1:
+      twin1:
+---

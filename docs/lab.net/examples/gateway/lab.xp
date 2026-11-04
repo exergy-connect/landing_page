@@ -1,0 +1,127 @@
+---
+id: "gateway"
+title: "Virtual gateway"
+summary: "Shared first-hop gateways: anycast on lan and apps, VRRP on guest with r1 as master."
+eyebrow: "EXERGY-LAB.NET LAB 04"
+headline: "Anycast and VRRP gateways"
+
+# First-hop gateway on IRB VLANs.
+# lan and apps share an anycast gateway (.1 on each subnet).
+# guest uses VRRP; r1 starts as master (priority 120) and r2 backs it up.
+# h1 and g1 reach app1 through whichever router currently owns the gateway MAC.
+
+_id: gateway
+
+topology:
+  _concept: topology
+  name: gateway
+  module: [vlan, gateway]
+  device: frr
+
+  gateway:
+    protocol: anycast
+    id: 1
+
+  vlans:
+    lan:
+      id: 10
+      mode: irb
+      gateway: true
+      prefix:
+        ipv4: 192.168.10.0/24
+    apps:
+      id: 20
+      mode: irb
+      gateway: true
+      prefix:
+        ipv4: 192.168.20.0/24
+    guest:
+      id: 30
+      mode: irb
+      gateway:
+        protocol: vrrp
+        vrrp:
+          group: 1
+      prefix:
+        ipv4: 192.168.30.0/24
+
+  nodes:
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping app1
+            type: ping
+            target: 192.168.20.10
+    h2:
+      device: linux
+      role: host
+    app1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h1
+            type: ping
+            target: 192.168.10.10
+    g1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping app1
+            type: ping
+            target: 192.168.20.10
+    sw1:
+      device: switch
+      role: switch
+    r1:
+      device: frr
+      gateway:
+        vrrp:
+          priority: 120
+    r2:
+      device: frr
+      gateway:
+        vrrp:
+          priority: 90
+
+  links:
+    - vlan.access: lan
+      interfaces:
+        - node: h1
+          ifname: eth1
+        - node: sw1
+          ifname: eth1
+    - vlan.access: lan
+      interfaces:
+        - node: h2
+          ifname: eth1
+        - node: sw1
+          ifname: eth2
+    - vlan.access: apps
+      interfaces:
+        - node: app1
+          ifname: eth1
+        - node: sw1
+          ifname: eth3
+    - vlan.access: guest
+      interfaces:
+        - node: g1
+          ifname: eth1
+        - node: sw1
+          ifname: eth4
+    - vlan.trunk: [lan, apps, guest]
+      interfaces:
+        - node: sw1
+          ifname: eth5
+        - node: r1
+          ifname: eth1
+    - vlan.trunk: [lan, apps, guest]
+      interfaces:
+        - node: sw1
+          ifname: eth6
+        - node: r2
+          ifname: eth1
+---

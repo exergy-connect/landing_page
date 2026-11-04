@@ -1,0 +1,70 @@
+---
+id: "vxlan"
+title: "Static VXLAN"
+summary: "One bridge VLAN extended between two VTEPs. Static ingress replication carries the VNI over UDP 4789."
+eyebrow: "EXERGY-LAB.NET LAB 06"
+headline: "Static VXLAN"
+
+# Static VXLAN. h1 and h2 share one bridge VLAN.
+# r1 and r2 are VTEPs and ingress-replicate that VLAN across the underlay.
+# The VTEP address is each router's underlay interface address.
+
+_id: vxlan
+
+topology:
+  _concept: topology
+  name: vxlan
+  module: [vlan, vxlan]
+  device: frr
+
+  vxlan:
+    flooding: static
+
+  vlans:
+    blue:
+      id: 10
+      mode: bridge
+      vni: 10010
+      prefix:
+        ipv4: 192.168.10.0/24
+
+  nodes:
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: 192.168.10.11
+    h2:
+      device: linux
+      role: host
+    r1:
+      device: frr
+    r2:
+      device: frr
+
+  links:
+    - vlan.access: blue
+      interfaces:
+        - node: h1
+          ifname: eth1
+        - node: r1
+          ifname: eth1
+    - vlan.access: blue
+      interfaces:
+        - node: h2
+          ifname: eth1
+        - node: r2
+          ifname: eth1
+    - interfaces:
+        - node: r1
+          ifname: eth2
+          ipv4: 10.1.1.1/30
+        - node: r2
+          ifname: eth2
+          ipv4: 10.1.1.2/30
+      prefix:
+        ipv4: 10.1.1.0/30
+---

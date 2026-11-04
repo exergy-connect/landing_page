@@ -1,0 +1,75 @@
+---
+id: "evpn"
+title: "EVPN VXLAN"
+summary: "The same bridge VLAN, with flood lists and remote MACs learned from EVPN after the BGP session is up."
+eyebrow: "EXERGY-LAB.NET LAB 07"
+headline: "EVPN VXLAN"
+
+# EVPN VXLAN. h1 and h2 share one bridge VLAN.
+# r1 and r2 learn each other's VTEP with an inclusive-multicast route once
+# their BGP session is up, and advertise host MACs as MAC/IP routes.
+# Unknown unicast is not flooded.
+
+_id: evpn
+
+topology:
+  _concept: topology
+  name: evpn
+  module: [vlan, vxlan, bgp, evpn]
+  device: frr
+
+  vxlan:
+    flooding: evpn
+
+  vlans:
+    blue:
+      id: 10
+      mode: bridge
+      vni: 10010
+      prefix:
+        ipv4: 192.168.10.0/24
+
+  nodes:
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: 192.168.10.11
+    h2:
+      device: linux
+      role: host
+    r1:
+      device: frr
+      bgp:
+        as: 65000
+    r2:
+      device: frr
+      bgp:
+        as: 65000
+
+  links:
+    - vlan.access: blue
+      interfaces:
+        - node: h1
+          ifname: eth1
+        - node: r1
+          ifname: eth1
+    - vlan.access: blue
+      interfaces:
+        - node: h2
+          ifname: eth1
+        - node: r2
+          ifname: eth1
+    - interfaces:
+        - node: r1
+          ifname: eth2
+          ipv4: 10.1.1.1/30
+        - node: r2
+          ifname: eth2
+          ipv4: 10.1.1.2/30
+      prefix:
+        ipv4: 10.1.1.0/30
+---

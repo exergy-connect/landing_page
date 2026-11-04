@@ -1,0 +1,90 @@
+---
+id: "vxlan-evpn-fabric"
+title: "VXLAN EVPN fabric"
+summary: "Leaves share overlay AS 65000 and peer to spines with a local-as override, so the underlay is eBGP. EVPN rides iBGP between the VTEP loopbacks."
+eyebrow: "EXERGY-LAB.NET LAB 09"
+headline: "iBGP EVPN over eBGP"
+
+# iBGP EVPN over an eBGP underlay. Leaves share overlay AS 65000.
+# Each leaf peers to the spines with local-as <unique> no-prepend replace-as,
+# so the underlay OPEN and AS_PATH show 65011 or 65012 and carry VTEP
+# loopbacks. EVPN rides iBGP between those loopbacks. Spines are not VTEPs.
+
+_id: vxlan-evpn-fabric
+
+topology:
+  _concept: topology
+  name: vxlan-evpn-fabric
+  device: frr
+  module: [vlan, vxlan, bgp, evpn, fabric]
+
+  vxlan:
+    flooding: evpn
+
+  fabric:
+    spines: 2
+    leafs: 2
+    spine:
+      bgp:
+        as: 65100
+    leaf:
+      bgp:
+        as: 65000
+        local_as: "{65010 + count}"
+        router_id: "10.255.0.{count}"
+    link:
+      prefix: 10.1.0.0/16
+
+  vlans:
+    blue:
+      id: 10
+      mode: bridge
+      vni: 10010
+      prefix:
+        ipv4: 192.168.10.0/24
+
+  nodes:
+    L1:
+      loopback:
+        ipv4: 10.255.0.1/32
+      vxlan:
+        vtep: 10.255.0.1
+      bgp:
+        advertise:
+          - ipv4: 10.255.0.1/32
+    L2:
+      loopback:
+        ipv4: 10.255.0.2/32
+      vxlan:
+        vtep: 10.255.0.2
+      bgp:
+        advertise:
+          - ipv4: 10.255.0.2/32
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: 192.168.10.11
+    h2:
+      device: linux
+      role: host
+
+  links:
+    - vlan.access: blue
+      interfaces:
+        - node: h1
+          ifname: eth1
+          ipv4: 192.168.10.10/24
+        - node: L1
+          ifname: eth3
+    - vlan.access: blue
+      interfaces:
+        - node: h2
+          ifname: eth1
+          ipv4: 192.168.10.11/24
+        - node: L2
+          ifname: eth3
+---

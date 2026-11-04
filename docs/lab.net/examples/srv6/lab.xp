@@ -1,0 +1,122 @@
+---
+id: "srv6"
+title: "SRv6 browser twin with native FRR"
+summary: "One Exergy-lab.net browser twin peers with native FRR over IPv6 TCP BGP; SRv6 transports IPv4 traffic between two real hosts."
+eyebrow: "NATIVE SRV6"
+headline: "Native FRR / Exergy-lab.net SRv6"
+
+# Routed IPv4 service over SRv6, using BGP unicast service SIDs.
+# HA -- PE1 (native FRR/VPP) -- RR1 (native FRR) -- TWIN1 (exergy-lab.net) -- HB
+# Pools allocate all addresses. Static loopback reachability bootstraps iBGP;
+# BGP carries locators and routed access prefixes. No EVPN or tenant VRF.
+_id: browser-twin-srv6
+provider: clab
+addressing:
+  mgmt:
+    network: lab_mgmt
+    ipv4: 192.168.121.0/24
+    start: 130
+  loopback:
+    ipv4: 10.0.0.0/24
+    prefix: 32
+    ipv6: fd00:10::/48
+    prefix6: 128
+  p2p:
+    ipv4: 10.1.0.0/16
+    prefix: 30
+    ipv6: fd00:1::/48
+    prefix6: 64
+
+topology:
+  layout: line
+  mtu: 1500
+  module: [bgp, routing, srv6]
+  bgp:
+    as: 65000
+    ipv4: [ibgp]
+    ipv6: [ibgp]
+    next_hop_self: false
+    advertise_loopback: false
+  srv6:
+    transport: [ibgp]
+    bgp:
+      ipv4: [ibgp]
+      ipv6: false
+    l3vpn: false
+  nodes:
+    rr1:
+      device:
+        type: frr
+      loopback:
+        ipv4: false
+      bgp:
+        ipv4: [ibgp]
+        next_hop_self: false
+        advertise_loopback: false
+        rr: true
+      routing:
+        static:
+          - ipv6: "{{ nodes.pe1.loopback.ipv6 }}"
+            nexthop: pe1
+          - ipv6: "{{ nodes.twin1.loopback.ipv6 }}"
+            nexthop: twin1
+    pe1:
+      device:
+        type: vpp
+        image: ghcr.io/jbemmel/frr-vpp-evpn-srv6:latest
+        control_plane: frr
+      module: [bgp, routing, srv6]
+      loopback:
+        ipv4: false
+      bgp:
+        ipv4: [ibgp]
+        next_hop_self: false
+        advertise_loopback: false
+      routing:
+        static:
+          - ipv6: "{{ nodes.rr1.loopback.ipv6 }}"
+            nexthop: rr1
+          - ipv6: "{{ nodes.twin1.loopback.ipv6 }}"
+            nexthop: rr1
+    twin1:
+      device:
+        type: exergy-lab.net
+        ws:
+          port: 4242
+      module: [bgp, routing, srv6]
+      loopback:
+        ipv4: false
+      bgp:
+        ipv4: [ibgp]
+        next_hop_self: false
+        advertise_loopback: false
+      routing:
+        static:
+          - ipv6: "{{ nodes.rr1.loopback.ipv6 }}"
+            nexthop: rr1
+          - ipv6: "{{ nodes.pe1.loopback.ipv6 }}"
+            nexthop: rr1
+    ha:
+      device:
+        type: alpine
+      module: []
+      loopback: false
+    hb:
+      device:
+        type: alpine
+      module: []
+      loopback: false
+  links:
+    - rr1:
+      pe1:
+      mtu: 1600
+    - rr1:
+      twin1:
+      mtu: 1600
+    - pe1:
+      ha:
+      ipv6: false
+    - twin1:
+      hb:
+      ipv6: false
+---

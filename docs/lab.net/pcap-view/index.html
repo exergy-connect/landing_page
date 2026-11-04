@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Packet capture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-kicker">Exergy Connect</div>
+      <h1>Packet capture</h1>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+  </header>
+  <main>
+    <input id="file" type="file" accept=".pcapng" hidden>
+    <div id="dropzone" hidden></div>
+    <section class="capture" aria-label="Capture overview">
+      <div>
+        <span class="label">File</span>
+        <strong id="filename">No capture loaded</strong>
+      </div>
+      <div>
+        <span class="label">Packets</span>
+        <strong id="count">—</strong>
+      </div>
+      <div>
+        <span class="label">TCP streams</span>
+        <strong id="streams">—</strong>
+      </div>
+      <div>
+        <span class="label">Duration</span>
+        <strong id="duration">—</strong>
+      </div>
+    </section>
+    <section class="packets" aria-label="Packet list">
+      <div class="toolbar">
+        <div>
+          <h2>Packets <span id="visible-count">0</span></h2>
+          <p id="list-caption">Waiting for the capture</p>
+        </div>
+        <label class="filter">Protocol
+          <select id="protocol" disabled>
+            <option value="all">All protocols</option>
+          </select>
+        </label>
+        <label class="filter">Source
+          <select id="source" disabled>
+            <option value="all">All sources</option>
+          </select>
+        </label>
+        <label class="filter">TCP stream
+          <select id="stream" disabled>
+            <option value="all">All packets</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Time (s)</th>
+              <th>Link</th>
+              <th title="VLAN IDs, outer to inner">VLAN tags</th>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Protocol</th>
+              <th>Length</th>
+              <th>Stream</th>
+              <th class="col-info">Info</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div id="empty">
+          <h3>No packets</h3>
+          <p>Rows appear when the capture finishes loading.</p>
+        </div>
+      </div>
+      <div class="pagination">
+        <span id="range">No packets to display</span>
+        <div>
+          <button id="prev" type="button" disabled>Previous</button>
+          <button id="next" type="button" disabled>Next</button>
+        </div>
+      </div>
+    </section>
+    <section id="packet-details" class="packets" hidden aria-labelledby="detail-title">
+      <div class="toolbar">
+        <h2 id="detail-title">Packet details</h2>
+        <button id="close-details" type="button">Close</button>
+      </div>
+      <div id="dissection"></div>
+    </section>
+  </main>
+  <script src="autoload.js"></script>
+  <script type="module" src="view.js"></script>
+</body>
+</html>

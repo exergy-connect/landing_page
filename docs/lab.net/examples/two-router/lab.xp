@@ -1,0 +1,46 @@
+---
+id: "two-router"
+title: "Two-router BGP"
+summary: "Two eBGP peers exchange OPEN, KEEPALIVE, and IPv4 UPDATEs over a virtual byte stream."
+eyebrow: "EXERGY-LAB.NET LAB 01"
+headline: "Two-router BGP"
+
+# Foundation demo: two eBGP peers over a virtual byte stream.
+# The browser instantiates device: frr nodes as JS wrappers around the BGP WASM core.
+
+_id: two-router
+
+topology:
+  _concept: topology
+  device: frr
+  module: [bgp]
+  name: two-router
+
+  nodes:
+    r1:
+      device: frr
+      bgp:
+        as: 65001
+        router_id: 10.0.0.1
+        advertise:
+          - ipv4: 203.0.113.0/24
+    r2:
+      device: frr
+      bgp:
+        as: 65002
+        router_id: 10.0.0.2
+        advertise:
+          - ipv4: 198.51.100.0/24
+
+  links:
+    - interfaces:
+        - node: r1
+          ifname: eth1
+          ipv4: 10.0.0.1/30
+        - node: r2
+          ifname: eth1
+          ipv4: 10.0.0.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.0.0.0/30
+---

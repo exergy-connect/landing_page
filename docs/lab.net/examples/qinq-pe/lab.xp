@@ -1,0 +1,105 @@
+---
+id: "qinq-pe"
+title: "Q-in-Q provider edge"
+summary: "CE1 and CE2 bridge C-VLAN 202 on access ports. PE1 and PE2 push S-tag 300 around that C-tag, and P forwards on the S-tag."
+eyebrow: "EXERGY-LAB.NET LAB 10"
+headline: "Q-in-Q provider edge bridge"
+
+# Q-in-Q provider edge bridge.
+# Customer A sites sit on access ports. CE1 and CE2 bridge C-VLAN 202.
+# PE1 and PE2 push S-tag 300 around that C-tag toward P.
+# P forwards on the S-tag and leaves the C-tag in place.
+# pc1 (192.168.1.1) pings pc2 (192.168.1.2).
+
+_id: qinq-pe
+
+topology:
+  _concept: topology
+  name: qinq-pe
+  module: [vlan]
+  device: frr
+
+  vlans:
+    customer:
+      id: 202
+      mode: bridge
+      prefix:
+        ipv4: 192.168.1.0/24
+    service:
+      id: 300
+      mode: qinq
+      customers: [customer]
+
+  nodes:
+    pc1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping pc2
+            type: ping
+            target: 192.168.1.2
+    ce1:
+      device: switch
+      role: switch
+    pe1:
+      device: switch
+      role: switch
+    p:
+      device: switch
+      role: switch
+    pe2:
+      device: switch
+      role: switch
+    ce2:
+      device: switch
+      role: switch
+    pc2:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping pc1
+            type: ping
+            target: 192.168.1.1
+
+  links:
+    - vlan.access: customer
+      interfaces:
+        - node: pc1
+          ifname: eth0
+          ipv4: 192.168.1.1/24
+        - node: ce1
+          ifname: ge-0/0/0
+    - vlan.access: customer
+      interfaces:
+        - node: ce1
+          ifname: ge-0/0/1
+        - node: pe1
+          ifname: ge-0/0/1
+    - vlan.trunk: [service]
+      interfaces:
+        - node: pe1
+          ifname: ge-0/0/0
+        - node: p
+          ifname: ge-0/0/0
+    - vlan.trunk: [service]
+      interfaces:
+        - node: p
+          ifname: ge-0/0/1
+        - node: pe2
+          ifname: ge-0/0/1
+    - vlan.access: customer
+      interfaces:
+        - node: pe2
+          ifname: ge-0/0/0
+        - node: ce2
+          ifname: ge-0/0/0
+    - vlan.access: customer
+      interfaces:
+        - node: ce2
+          ifname: ge-0/0/1
+        - node: pc2
+          ifname: eth0
+          ipv4: 192.168.1.2/24
+---

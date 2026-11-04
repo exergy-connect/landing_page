@@ -1,0 +1,119 @@
+---
+id: "ospfv3"
+title: "OSPFv3 IPv6"
+summary: "Single-area IPv6 routing with OSPFv3, link-local next hops, and client-to-client ICMPv6."
+headline: "OSPFv3 with IPv6 client ping"
+
+# Single-area IPv6 OSPFv3: passive host subnets, numbered router adjacency.
+# C/WASM handles packets, database exchange, flooding, SPF, and protocol timers.
+
+_id: ospfv3
+
+topology:
+  _concept: topology
+  device: frr
+  module: [ospf]
+  name: ospfv3
+
+  nodes:
+    r1:
+      device: frr
+      ospf: false
+      ospfv3:
+        router_id: 10.255.0.1
+    r2:
+      device: frr
+      ospf: false
+      ospfv3:
+        router_id: 10.255.0.2
+    client1:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv6: ::/0
+            nexthop: 2001:db8:1::1
+      validation:
+        actions:
+          - label: ping client2
+            type: ping
+            target: 2001:db8:3::2
+            count: 3
+    client2:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv6: ::/0
+            nexthop: 2001:db8:3::1
+
+  links:
+    - interfaces:
+        - node: client1
+          ifname: eth1
+          ipv6: 2001:db8:1::2/64
+        - node: r1
+          ifname: eth1
+          ipv6: 2001:db8:1::1/64
+      type: p2p
+      prefix:
+        ipv6: 2001:db8:1::0/64
+    - interfaces:
+        - node: r1
+          ifname: eth2
+          ipv6: 2001:db8:2::1/64
+        - node: r2
+          ifname: eth1
+          ipv6: 2001:db8:2::2/64
+      type: p2p
+      prefix:
+        ipv6: 2001:db8:2::0/64
+    - interfaces:
+        - node: r2
+          ifname: eth2
+          ipv6: 2001:db8:3::1/64
+        - node: client2
+          ifname: eth1
+          ipv6: 2001:db8:3::2/64
+      type: p2p
+      prefix:
+        ipv6: 2001:db8:3::0/64
+
+  validate:
+    - label: r1 has both client subnets
+      state:
+        - node: r1
+          routes:
+            - prefix: 2001:db8:1::/64
+              protocol: connected
+            - prefix: 2001:db8:3::/64
+              protocol: ospfv3
+    - label: r2 has both client subnets
+      state:
+        - node: r2
+          routes:
+            - prefix: 2001:db8:3::/64
+              protocol: connected
+            - prefix: 2001:db8:1::/64
+              protocol: ospfv3
+    - label: hosts have a default toward their router
+      state:
+        - node: client1
+          routes:
+            - prefix: ::/0
+              protocol: static
+              nexthop: 2001:db8:1::1
+        - node: client2
+          routes:
+            - prefix: ::/0
+              protocol: static
+              nexthop: 2001:db8:3::1
+    - label: client1 reaches client2
+      packet:
+        from: client1
+        type: icmp-echo
+        target: 2001:db8:3::2
+        expect:
+          type: icmp-echo-reply
+          from: client2
+---

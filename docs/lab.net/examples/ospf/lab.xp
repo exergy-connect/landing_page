@@ -1,0 +1,120 @@
+---
+id: "ospf"
+title: "OSPF IPv4"
+summary: "Single-area OSPF routing between two routers with passive client subnets and host-to-host ICMP."
+eyebrow: "EXERGY-LAB.NET LAB 12"
+headline: "OSPF with client ping"
+
+# Single-area IPv4 OSPF: passive host subnets, numbered router adjacency.
+# C/WASM handles packets, database exchange, flooding, SPF, and protocol timers.
+
+_id: ospf
+
+topology:
+  _concept: topology
+  device: frr
+  module: [ospf]
+  name: ospf
+
+  nodes:
+    r1:
+      device: frr
+      ospf:
+        router_id: 10.255.0.1
+    r2:
+      device: frr
+      ospf:
+        router_id: 10.255.0.2
+    client1:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: 10.1.1.1
+      validation:
+        actions:
+          - label: ping client2
+            type: ping
+            target: 10.1.3.2
+            count: 3
+    client2:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: 10.1.3.1
+
+  links:
+    - interfaces:
+        - node: client1
+          ifname: eth1
+          ipv4: 10.1.1.2/30
+        - node: r1
+          ifname: eth1
+          ipv4: 10.1.1.1/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.1.0/30
+    - interfaces:
+        - node: r1
+          ifname: eth2
+          ipv4: 10.1.2.1/30
+        - node: r2
+          ifname: eth1
+          ipv4: 10.1.2.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.2.0/30
+    - interfaces:
+        - node: r2
+          ifname: eth2
+          ipv4: 10.1.3.1/30
+        - node: client2
+          ifname: eth1
+          ipv4: 10.1.3.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.3.0/30
+
+  validate:
+    - label: r1 has both client subnets
+      state:
+        - node: r1
+          routes:
+            - prefix: client1.prefix
+              protocol: connected
+            - prefix: client2.prefix
+              protocol: ospf
+              nexthop: r2.ipv4.r1
+    - label: r2 has both client subnets
+      state:
+        - node: r2
+          routes:
+            - prefix: client2.prefix
+              protocol: connected
+            - prefix: client1.prefix
+              protocol: ospf
+              nexthop: r1.ipv4.r2
+    - label: hosts have a default toward their router
+      state:
+        - node: client1
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: static
+              nexthop: r1.ipv4.client1
+        - node: client2
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: static
+              nexthop: r2.ipv4.client2
+    - label: client1 reaches client2
+      packet:
+        from: client1
+        type: icmp-echo
+        target: client2.ipv4
+        expect:
+          type: icmp-echo-reply
+          from: client2
+---

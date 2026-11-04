@@ -1,0 +1,69 @@
+---
+id: "ipv6-ra"
+title: "IPv6 router advertisements"
+summary: "IRB VLANs with IPv6 prefixes. r1 sends router advertisements and h1 reaches h2 through the learned default route."
+eyebrow: "EXERGY-LAB.NET LAB 05"
+headline: "IPv6 router advertisements"
+
+# IPv6 IRB VLANs. r1 originates router advertisements from each SVI.
+# Hosts already have stable globals (::10). The advertisement installs ::/0
+# via r1's link-local, and h1 reaches h2 through that default route.
+
+_id: ipv6-ra
+
+topology:
+  _concept: topology
+  name: ipv6-ra
+  module: [vlan]
+  device: frr
+
+  vlans:
+    lan:
+      id: 10
+      mode: irb
+      prefix:
+        ipv6: 2001:db8:10::/64
+    apps:
+      id: 20
+      mode: irb
+      prefix:
+        ipv6: 2001:db8:20::/64
+
+  nodes:
+    h1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: ping h2
+            type: ping
+            target: 2001:db8:20::10
+    h2:
+      device: linux
+      role: host
+    sw1:
+      device: switch
+      role: switch
+    r1:
+      device: frr
+
+  links:
+    - vlan.access: lan
+      interfaces:
+        - node: h1
+          ifname: eth1
+        - node: sw1
+          ifname: eth1
+    - vlan.access: apps
+      interfaces:
+        - node: h2
+          ifname: eth1
+        - node: sw1
+          ifname: eth2
+    - vlan.trunk: [lan, apps]
+      interfaces:
+        - node: sw1
+          ifname: eth3
+        - node: r1
+          ifname: eth1
+---

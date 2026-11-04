@@ -1,0 +1,161 @@
+---
+id: "isis"
+title: "IS-IS IPv4"
+summary: "Level-1 in area 49.0001 leaks into level-2 through a level-1-2 router. Area 49.0002 learns the client subnet and the hosts can ping."
+eyebrow: "EXERGY-LAB.NET LAB 13"
+headline: "IS-IS with client ping"
+
+# Two-area IPv4 IS-IS. r1 is level-1 in 49.0001 and installs a default
+# toward the nearest level-1-2 router. r2 leaks that area into level-2.
+# r3 is level-2 in 49.0002. Routing is synchronous SPF, without IS-IS packets.
+
+_id: isis
+
+topology:
+  _concept: topology
+  device: frr
+  module: [isis]
+  name: isis
+
+  nodes:
+    r1:
+      device: frr
+      isis:
+        net: 49.0001.0000.0000.0001.00
+        level: 1
+    r2:
+      device: frr
+      isis:
+        net: 49.0001.0000.0000.0002.00
+        level: 1-2
+    r3:
+      device: frr
+      isis:
+        net: 49.0002.0000.0000.0003.00
+        level: 2
+    client1:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: 10.1.1.1
+      validation:
+        actions:
+          - label: ping client2
+            type: ping
+            target: 10.1.4.2
+            count: 3
+    client2:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: 10.1.4.1
+
+  links:
+    - interfaces:
+        - node: client1
+          ifname: eth1
+          ipv4: 10.1.1.2/30
+        - node: r1
+          ifname: eth1
+          ipv4: 10.1.1.1/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.1.0/30
+    - interfaces:
+        - node: r1
+          ifname: eth2
+          ipv4: 10.1.2.1/30
+        - node: r2
+          ifname: eth1
+          ipv4: 10.1.2.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.2.0/30
+    - interfaces:
+        - node: r2
+          ifname: eth2
+          ipv4: 10.1.3.1/30
+        - node: r3
+          ifname: eth1
+          ipv4: 10.1.3.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.3.0/30
+    - interfaces:
+        - node: r3
+          ifname: eth2
+          ipv4: 10.1.4.1/30
+        - node: client2
+          ifname: eth1
+          ipv4: 10.1.4.2/30
+      type: p2p
+      prefix:
+        ipv4: 10.1.4.0/30
+
+  validate:
+    - label: level-1 stays in the area and level-2 crosses it
+      state:
+        - node: r1
+          isis:
+            - peer: r2
+              level: "1"
+              state: up
+        - node: r2
+          isis:
+            - peer: r1
+              level: "1"
+            - peer: r3
+              level: "2"
+        - node: r3
+          isis:
+            - peer: r2
+              level: "2"
+    - label: r1 has a level-1 default and r3 learns the leaked client subnet
+      state:
+        - node: r1
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: isis
+              nexthop: r2.ipv4.r1
+            - prefix: client1.prefix
+              protocol: connected
+        - node: r2
+          routes:
+            - prefix: client1.prefix
+              protocol: isis
+              nexthop: r1.ipv4.r2
+            - prefix: client2.prefix
+              protocol: isis
+              nexthop: r3.ipv4.r2
+        - node: r3
+          routes:
+            - prefix: client1.prefix
+              protocol: isis
+              nexthop: r2.ipv4.r3
+            - prefix: client2.prefix
+              protocol: connected
+    - label: hosts have a default toward their router
+      state:
+        - node: client1
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: static
+              nexthop: r1.ipv4.client1
+        - node: client2
+          routes:
+            - prefix: 0.0.0.0/0
+              protocol: static
+              nexthop: r3.ipv4.client2
+    - label: client1 reaches client2
+      packet:
+        from: client1
+        type: icmp-echo
+        target: client2.ipv4
+        expect:
+          type: icmp-echo-reply
+          from: client2
+---

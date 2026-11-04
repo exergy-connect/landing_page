@@ -1,0 +1,159 @@
+---
+id: "ai-fabric"
+title: "AI fabric"
+summary: "Two FRR Clos fabrics. The fabric module places eight GPU rails, two per leaf, and one VRF per tenant."
+eyebrow: "EXERGY-LAB.NET"
+headline: "GPU rails and tenant VRFs"
+
+# Two HGX hosts per GPU rack (four by default). The GPU Clos and the compute Clos are separate fabrics.
+# The GPU instance declares rails and rails_per_leaf (defaults 8 and 2).
+# The fabric module places those links, their VLAN addresses, and a VRF
+# on each GPU spine per tenant.
+# GPU spines and leaves use static SRv6. Spine locators are
+# 5f00:0:100::/48 through 5f00:0:103::/48. Leaf locators start at
+# 5f00:0:200::/48 and step by 10 per rack. local_fallback 5f00::/32 is
+# End.DT6 on every GPU node. Leaves also set usd, so locator::/128 is End.DT6.
+# Allocations repeat per two GPU racks as the fabric grows.
+# In the first rack group, red owns hgx1 and hgx2. green takes four GPUs on hgx127.
+# blue takes the other four on hgx127 and six on hgx128.
+# Compute leaves dual-home every host into those tenant VLANs.
+# GPU rails have routed dual-stack leaf interfaces. Static IPv6 policies
+# encapsulate remote rail traffic to the destination leaf's End.DT6 SID.
+# HGX hosts route the GPU link pools through their first allocated rail;
+# their IPv4 default routes remain on the 172.16.x.y compute network.
+
+_id: ai-fabric
+
+addressing:
+  loopback:
+    ipv4: 10.0.0.0/24
+    prefix: 32
+    ipv6: 2001:db8::/48
+    prefix6: 128
+
+topology:
+  _concept: topology
+  name: ai-fabric
+  design:
+    gpu_net_leafs: 8  # Total GPU leaves, four per rack and two rails per leaf.
+  layout: dual-tree
+  device: frr
+  module: [fabric, bgp, vlan, vxlan, evpn, gateway]
+  bgp:
+    timers:
+      keepalive: 30
+      hold: 90
+  vxlan:
+    flooding: evpn
+  gateway:
+    id: 1
+    protocol: anycast
+
+  fabric:
+    lan:
+      ipv4: 172.16.128.0/17
+      prefix: 24
+    tenants:
+      red:
+        per_racks: 2
+        hosts: 2
+      green:
+        per_racks: 2
+        gpus: 4
+      blue:
+        per_racks: 2
+        gpus: 10
+    instances:
+      - name: gpu-net
+        rails: 8
+        rails_per_leaf: 2
+        hosts:
+          per_rack: 2
+          name: hgx
+        rail:
+          mode: irb
+          ipv6: fd00:10::/48
+        link:
+          prefix: 10.1.0.0/16
+          prefix6: 2001:db8:1::/48
+        spine:
+          name: S{pod}-{name}-{count}
+          group: spines
+          loopbacks:
+            - pool: loopback
+          module: [bgp, vlan, vxlan, evpn, gateway, srv6]
+          srv6:
+            transport: [static]
+            bgp: false
+            l3vpn: false
+            local_fallback: 5f00::/32
+            locator: "5f00:0:{99 + count}::/48"
+          bgp:
+            as: "{65100 + count}"
+            rr: false
+        leaf:
+          name: L{pod}-{name}-{rack}-{count}
+          group: leafs
+          loopbacks:
+            - pool: loopback
+          module: [bgp, vlan, vxlan, evpn, gateway, srv6]
+          srv6:
+            transport: [static]
+            bgp: false
+            l3vpn: false
+            local_fallback: 5f00::/32
+            usd: true
+            locator: "5f00:0:{199 + 10 * (rack - 1) + count}::/48"
+          bgp:
+            as: "{65200 + 10 * rack + count}"
+        pods:
+          - name: gpu-net
+            index: 2
+            spines: "{design.gpu_net_leafs / 2}"
+            racks:
+              count: "{design.gpu_net_leafs / 4}"
+              leafs: 4
+      - name: compute
+        link:
+          prefix: 172.16.0.0/17
+          prefix6: 2001:db8:2::/48
+        spine:
+          name: S{pod}-{name}-{count}
+          group: spines
+          loopbacks:
+            - pool: loopback
+          bgp:
+            as: "{65300 + count}"
+            rr: true
+        leaf:
+          name: L{pod}-{name}-{rack}-{count}
+          group: leafs
+          loopbacks:
+            - pool: loopback
+          vxlan:
+            vtep: 0
+          bgp:
+            as: 65001
+            local_as: "{65400 + count}"
+        pods:
+          - name: compute
+            index: 1
+            spines: 2
+            racks:
+              - index: 1
+                leafs: 2
+
+  nodes:
+    hgx1:
+      device: linux
+      role: host
+    hgx2:
+      device: linux
+      role: host
+    hgx127:
+      device: linux
+      role: host
+    hgx128:
+      device: linux
+      role: host
+---
