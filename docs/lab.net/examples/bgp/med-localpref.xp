@@ -1,0 +1,167 @@
+---
+id: med-localpref
+title: BGP MED and local preference
+summary: Two exits to one client LAN; follow ICMP as MED and local preference change the selected path.
+headline: Choose the exit, watch the ping
+
+instructions: |
+  Explore how BGP attributes change the ICMP path.
+
+                    AS 65002
+                  +-- edge1 --+
+  client1 -- r1 --+           +-- shared LAN -- client2
+         AS 65001 +-- edge2 --+
+
+  Launch, wait for BGP, then use client1's ping action. Both edges advertise
+  203.0.113.0/24 with equal AS paths; r1 initially prefers edge1's lower MED.
+  Inspect r1's BGP routes and FIB, and follow ICMP echo requests in the animation.
+
+  Experiments: edit the values below, then Reset/Launch to apply each change.
+  1. Initial: edge1 MED 10, edge2 MED 50; both inbound bgp.locpref 100.
+     Echo requests: client1 -> r1 -> edge1 -> client2.
+  2. Change bgp.med on edge1’s interface toward r1 to 100. Lower MED now selects edge2.
+     Echo requests: client1 -> r1 -> edge2 -> client2.
+  3. Keep those MEDs; set bgp.locpref on r1’s interface toward edge1 to 200.
+     Higher local preference overrides MED: requests use edge1 again.
+
+  The edges set MED on their advertisements; r1 sets local preference on import.
+  Local preference is internal to the receiving AS and is not sent over eBGP.
+  MED is compared here because both paths come from the same neighboring AS.
+  client2 always uses edge1 as its default gateway, so echo replies use edge1
+  in every stage. Stage 2 deliberately demonstrates asymmetric traffic flow.
+
+  Validation below describes stage 1 (also the winning next hop in stage 3).
+  For stage 2 change the destination-route nexthop check to edge2.ipv4.r1.
+
+topology:
+  name: med-localpref
+  device: frr
+  module: [bgp]
+  plugin: [bgp.policy]
+  bgp:
+    sessions:
+      ipv4: [ebgp]
+      ipv6: []
+
+  nodes:
+    lan:
+      device: switch
+      role: switch
+    r1:
+      bgp:
+        as: 65001
+        locpref: 100
+    edge1:
+      bgp:
+        as: 65002
+        advertise: [203.0.113.0/24]
+    edge2:
+      bgp:
+        as: 65002
+        advertise: [203.0.113.0/24]
+    client1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: Follow ICMP to client2
+            type: ping
+            target: client2
+            count: 5
+    client2:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: 203.0.113.1
+      validation:
+        actions:
+          - label: Ping back to client1
+            type: ping
+            target: client1
+            count: 3
+
+  links:
+    - interfaces:
+        - node: r1
+          bgp:
+            locpref: 100
+        - node: edge1
+          bgp:
+            med: 10
+    - interfaces:
+        - node: r1
+          bgp:
+            locpref: 100
+        - node: edge2
+          bgp:
+            med: 50
+    - prefix:
+        ipv4: 192.0.2.0/24
+      interfaces:
+        - node: r1
+          ipv4: 192.0.2.1/24
+        - node: client1
+          ipv4: 192.0.2.10/24
+    - prefix:
+        ipv4: 203.0.113.0/24
+      interfaces:
+        - node: edge1
+          ipv4: 203.0.113.1/24
+        - node: lan
+          ipv4: false
+    - prefix:
+        ipv4: 203.0.113.0/24
+      interfaces:
+        - node: edge2
+          ipv4: 203.0.113.2/24
+        - node: lan
+          ipv4: false
+    - prefix:
+        ipv4: 203.0.113.0/24
+      interfaces:
+        - node: client2
+          ipv4: 203.0.113.10/24
+        - node: lan
+          ipv4: false
+
+  validate:
+    - label: Both eBGP paths are available
+      state:
+        - node: r1
+          bgp:
+            - peer: edge1
+              asn: edge1.asn
+              state: established
+            - peer: edge2
+              asn: edge2.asn
+              state: established
+    - label: Lower MED selects edge1 with equal local preference
+      state:
+        - node: r1
+          routes:
+            - prefix: 203.0.113.0/24
+              protocol: bgp
+              nexthop: edge1.ipv4.r1
+    - label: Both edges have a return route to client1
+      state:
+        - node: edge1
+          routes:
+            - prefix: 192.0.2.0/24
+              protocol: bgp
+              nexthop: r1.ipv4.edge1
+        - node: edge2
+          routes:
+            - prefix: 192.0.2.0/24
+              protocol: bgp
+              nexthop: r1.ipv4.edge2
+    - label: ICMP reaches client2 and returns
+      packet:
+        from: client1
+        type: icmp-echo
+        target: client2.ipv4
+        expect:
+          type: icmp-echo-reply
+          from: client2
+---

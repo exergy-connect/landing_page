@@ -491,11 +491,11 @@ button { border:0; border-radius:9px; background:var(--green); color:#042f2e; pa
 .vlan-legend button.vlan-chip:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
 .vlan-legend button.vlan-chip[aria-pressed="true"] { border-color:var(--vlan-focus-color); box-shadow:0 0 12px color-mix(in srgb,var(--vlan-focus-color) 55%,transparent); }
 .vlan-focus-clear[hidden] { display:none; }
-.vlan-stage .vlan-focus-muted { opacity:.18; filter:blur(2px); transition:opacity .2s,filter .2s; }
+/* Keep focus effects filter-free: large SVG links can require huge offscreen
+   filter surfaces and exhaust the iOS browser's rendering memory. */
+.vlan-stage .vlan-focus-muted { opacity:.18; }
 .vlan-stage article.vlan-focus-match { border-color:var(--vlan-focus-color); box-shadow:0 0 0 1px var(--vlan-focus-color),0 0 22px color-mix(in srgb,var(--vlan-focus-color) 40%,transparent); }
-.vlan-stage g.vlan-link.vlan-focus-match { filter:drop-shadow(0 0 5px var(--vlan-focus-color)); }
 .vlan-stage g.vlan-link.vlan-focus-match line:not(.vlan-focus-muted) { stroke-width:3; }
-@media (prefers-reduced-motion:reduce) { .vlan-stage .vlan-focus-muted { transition:none; } }
 #topology.vlan-focused .vlan-stage article.vlan-focus-match { border-color:var(--vlan-focus-color); box-shadow:0 0 0 1px var(--vlan-focus-color),0 0 22px color-mix(in srgb,var(--vlan-focus-color) 40%,transparent); }
 
 .table-filter-menu {
@@ -532,3 +532,7 @@ button { border:0; border-radius:9px; background:var(--green); color:#042f2e; pa
   outline-offset: -2px;
 }
 .table-filter-menu button[aria-selected="true"] { background: #75bfff20; }
+
+.lab-instructions { border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+.lab-instructions > summary { padding:10px 14px; cursor:pointer; }
+.lab-instructions [data-instructions] { padding:0 14px 14px; white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.7 var(--mono); }

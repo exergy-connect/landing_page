@@ -11,10 +11,8 @@ headline: "Q-in-Q provider edge bridge"
 # P forwards on the S-tag and leaves the C-tag in place.
 # pc1 (192.168.1.1) pings pc2 (192.168.1.2).
 
-_id: qinq-pe
 
 topology:
-  _concept: topology
   name: qinq-pe
   module: [vlan]
   device: frr

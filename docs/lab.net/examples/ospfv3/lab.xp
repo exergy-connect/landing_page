@@ -7,14 +7,12 @@ headline: "OSPFv3 with IPv6 client ping"
 # Single-area IPv6 OSPFv3: passive host subnets, numbered router adjacency.
 # C/WASM handles packets, database exchange, flooding, SPF, and protocol timers.
 
-_id: ospfv3
 
 addressing:
   p2p: { ipv4: false, ipv6: '2001:db8:2::/48', prefix6: 64 }
   lan: { ipv4: false, ipv6: '2001:db8:1::/48', prefix6: 64 }
 
 topology:
-  _concept: topology
   device: frr
   module: [ospf]
   name: ospfv3

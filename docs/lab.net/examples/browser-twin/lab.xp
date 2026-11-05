@@ -12,7 +12,6 @@ headline: "Browser twin and native eBGP"
 #     examples/network_validation/labs/exergy-lab.net/browser-twin.xp \
 #     --final clab.yml --no-execute
 
-_id: browser-twin
 provider: clab
 
 addressing:

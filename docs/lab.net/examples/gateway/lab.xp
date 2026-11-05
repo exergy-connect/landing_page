@@ -10,10 +10,8 @@ headline: "Anycast and VRRP gateways"
 # guest uses VRRP; r1 starts as master (priority 120) and r2 backs it up.
 # h1 and g1 reach app1 through whichever router currently owns the gateway MAC.
 
-_id: gateway
 
 topology:
-  _concept: topology
   name: gateway
   module: [vlan, gateway]
   device: frr

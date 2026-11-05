@@ -9,10 +9,8 @@ headline: "IS-IS with client ping"
 # toward the nearest level-1-2 router. r2 leaks that area into level-2.
 # r3 is level-2 in 49.0002. Routing is synchronous SPF, without IS-IS packets.
 
-_id: isis
 
 topology:
-  _concept: topology
   device: frr
   module: [isis]
   name: isis

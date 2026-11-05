@@ -7,7 +7,6 @@ id: ospf-ibgp
 title: OSPF + iBGP EVPN fabric
 summary: 'Infrahub Arista design: unnumbered OSPF, two loopbacks per router,
   and an EVPN/VXLAN stretched VLAN.'
-_id: ospf-ibgp
 addressing:
   loopback:
     ipv4: 10.10.1.0/25
@@ -22,7 +21,6 @@ addressing:
     ipv4: 172.25.9.0/24
     prefix: 24
 topology:
-  _concept: topology
   layout: tree
   name: ospf-ibgp
   device: eos

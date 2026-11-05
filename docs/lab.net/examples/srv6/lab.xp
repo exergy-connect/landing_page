@@ -9,7 +9,6 @@ headline: "Native FRR / Exergy-lab.net SRv6"
 # HA -- PE1 (native FRR/VPP) -- RR1 (native FRR) -- TWIN1 (exergy-lab.net) -- HB
 # Pools allocate all addresses. Static loopback reachability bootstraps iBGP;
 # BGP carries locators and routed access prefixes. No EVPN or tenant VRF.
-_id: browser-twin-srv6
 provider: clab
 addressing:
   mgmt:

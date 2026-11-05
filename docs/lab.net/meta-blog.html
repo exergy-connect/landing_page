@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Design detailed network fabrics, explore scenarios, and publish interactive networking articles that readers can run themselves.">
+  <title>The network design becomes the story · Exergy-lab.net</title>
+  <style>
+    :root { color-scheme:dark; font:16px/1.75 system-ui,sans-serif; color:#e8eef8; background:#090f19; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(ellipse at 80% 0,#16313566,transparent 55%); }
+    main { width:min(1080px,calc(100% - 40px)); margin:auto; padding:28px 0 40px; }
+    nav,footer { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+    nav { padding-bottom:22px; border-bottom:1px solid #ffffff16; }
+    a { color:#6ee7ce; text-underline-offset:4px; }
+    nav a { text-decoration:none; font-weight:700; letter-spacing:-.03em; }
+    nav span,.eyebrow { color:#91a4b9; font:11px/1.5 ui-monospace,monospace; letter-spacing:.12em; text-transform:uppercase; }
+    header { max-width:800px; margin:48px 0 36px; }
+    .eyebrow { color:#6ee7ce; }
+    h1 { font-size:clamp(34px,6vw,60px); letter-spacing:-.045em; line-height:1.08; margin:16px 0 24px; font-weight:650; }
+    .intro { color:#bdcbdc; font-size:20px; line-height:1.6; }
+    .prose { max-width:740px; }
+    h2 { margin:40px 0 12px; font-size:26px; letter-spacing:-.025em; line-height:1.25; }
+    p,li { color:#a9b8ca; }
+    strong { color:#e8eef8; }
+    code { font:0.85em/1.6 ui-monospace,monospace; color:#dce8f5; }
+    pre { overflow-x:auto; padding:20px; border:1px solid #2a3b50; border-radius:12px; background:#0e1827; }
+    figure { margin:32px 0; }
+    iframe { display:block; width:100%; height:850px; border:1px solid #2a3b50; border-radius:12px; background:#0e1827; }
+    figcaption { margin-top:12px; font-size:13px; color:#91a4b9; }
+    footer { margin-top:48px; padding-top:18px; border-top:1px solid #ffffff16; font-size:12px; color:#91a4b9; }
+    @media(max-width:650px) { main{width:calc(100% - 28px)}header{margin-top:32px}.intro{font-size:18px}iframe{height:1000px} }
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="Main"><a href="./index.html">Exergy-lab.net /</a><span>Networks you can run</span></nav>
+    <article>
+      <header>
+        <p class="eyebrow">Executable networking articles</p>
+        <h1>The network design becomes the story</h1>
+        <p class="intro">A detailed fabric definition can serve as both a design experiment and the executable example in a technical article. Here is how the eBGP blog connects topology, protocol state, and reader interaction.</p>
+      </header>
+      <div class="prose">
+        <h2>Define the network before writing the walkthrough</h2>
+        <p>The <a href="./examples/ebgp-icmp/lab.xp">eBGP lab</a> is a YAML <code>.xp</code> document. Its topology declares two routers in different autonomous systems and a client behind each. This abbreviated definition captures the network:</p>
+        <pre><code>topology:
+  device: frr
+  module: [bgp]
+  nodes:
+    r1: {bgp: {as: 65001}}
+    r2: {bgp: {as: 65002}}
+    client1: {device: linux, role: host}
+    client2: {device: linux, role: host}
+  links: [r1-r2, client1-r1, r2-client2]</code></pre>
+        <p>The loader allocates addresses, derives interfaces and loopbacks, and resolves BGP neighbors. Client-facing subnets are advertised into BGP; hosts receive default routes toward their attached routers. The source can also specify address pools, interface attributes, and protocol settings when those details are part of the experiment.</p>
+        <p>For a larger design, the fabric module expands leaf and spine counts, tier settings, pods, and racks into nodes and links. Define the AS allocation, loopbacks, client attachments, and overlay settings upfront. That produces a concrete fabric against which to test failure scenarios and alternative peering arrangements.</p>
+        <h2>Run the protocols and inspect the result</h2>
+        <p>Starting the embedded lab loads the WebAssembly engine and instantiates the topology. JavaScript coordinates the simulation and browser interface; the C/WASM core provides protocol and forwarding functionality. In this example, routers execute BGP through the JavaScript/WASM runtime, while clients use JavaScript host behavior.</p>
+        <p>BGP exchanges populate routing state, and traffic tests use the resulting forwarding tables. Packet events feed the link badges and message history. The article displays session state and installed-route counts separately, allowing readers to relate an established adjacency to the routes it supplies and the traffic those routes carry.</p>
+        <p>The runtime advances simulated time and supports pause, reset, and link changes. In the example below, start the lab and ping client2. Disable the router-to-router link, then repeat the ping. Restore it and observe the session and reachability recover.</p>
+      </div>
+      <figure>
+        <iframe src="./blog.html" title="Interactive article: Connecting two networks with eBGP" loading="lazy"></iframe>
+        <figcaption><a href="./blog.html">Open the eBGP article separately</a>. Its readouts and ping control use the running lab’s session API.</figcaption>
+      </figure>
+      <div class="prose">
+        <h2>Embed the lab and connect the prose to its state</h2>
+        <p>The custom element loads a lab definition and provides the topology view and execution controls:</p>
+        <pre><code>&lt;script type="module" src="./embed.js"&gt;&lt;/script&gt;
+&lt;lab-embed src="./examples/ebgp-icmp/lab.xp"&gt;&lt;/lab-embed&gt;</code></pre>
+        <p>For custom article controls, import the module before accessing the element’s session. This is the same API used by the eBGP page:</p>
+        <pre><code>import './embed.js';
+
+const session = document.querySelector('lab-embed').session;
+session.subscribe('summary', summary =&gt; {
+  // Render summary.state, summary.sessions, and summary.nodes.
+});
+session.subscribe('packet', event =&gt; {
+  // Add protocol messages to the article’s event history.
+});
+
+// Call from a button after the lab has started.
+const result = session.ping({
+  node: 'client1', target: 'client2', count: 1
+});</code></pre>
+        <p>An iframe can embed the standalone topology instead: <code>embed.html?lab=examples/ebgp-icmp/lab.xp</code>. This page embeds the complete <code>blog.html</code> article so its custom readouts remain available too.</p>
+        <h2>Make the scenario’s expectations explicit</h2>
+        <p>The lab’s <code>validate</code> section describes expected device state and packet responses. For example, this check requires r1 to install the remote client subnet through r2:</p>
+        <pre><code>validate:
+  - label: r1 learns the remote client subnet
+    state:
+      - node: r1
+        routes:
+          - prefix: client2.prefix
+            protocol: bgp
+            nexthop: r2.ipv4.r1</code></pre>
+        <p>References such as <code>client2.prefix</code> follow the allocated topology, so checks survive addressing changes. The full example also checks BGP session state, host default routes, an ICMP reply, and completion of an MRC RDMA Write. These declarations support validation workflows; the embedded article exposes its own ping button through the session API.</p>
+        <p>In a redundant fabric, extend the investigation to a leaf–spine failure: check which prefixes remain installed, whether next hops change, and whether clients can still communicate. A dual-homed client adds an attachment-failure scenario. EVPN/VXLAN and SRv6 designs introduce further questions about overlay reachability and forwarding paths. Each walkthrough can pair a specific configuration choice with a state check and a traffic test.</p>
+        <p>The published artifact then contains the topology that supports the explanation, the controls needed to reproduce the experiment, and the source for readers who want to change it.</p>
+        <p><a href="./index.html?fabric-designer=1">Build a fabric →</a></p>
+      </div>
+    </article>
+    <footer><span>Exergy-lab.net · Interactive networking stories</span><a href="./blog.html">Try the eBGP article →</a><span>© 2026 Exergy LLC. All rights reserved.</span></footer>
+  </main>
+</body>
+</html>

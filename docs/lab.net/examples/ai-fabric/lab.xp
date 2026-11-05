@@ -22,7 +22,6 @@ headline: "GPU rails and tenant VRFs"
 # HGX hosts route the GPU link pools through their first allocated rail;
 # their IPv4 default routes remain on the 172.16.x.y compute network.
 
-_id: ai-fabric
 
 addressing:
   loopback:
@@ -32,7 +31,6 @@ addressing:
     prefix6: 128
 
 topology:
-  _concept: topology
   name: ai-fabric
   design:
     gpu_net_leafs: 8  # Total GPU leaves, four per rack and two rails per leaf.

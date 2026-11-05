@@ -10,10 +10,8 @@ headline: "iBGP EVPN over eBGP"
 # so the underlay OPEN and AS_PATH show 65011 or 65012 and carry VTEP
 # loopbacks. EVPN rides iBGP between those loopbacks. Spines are not VTEPs.
 
-_id: vxlan-evpn-fabric
 
 topology:
-  _concept: topology
   name: vxlan-evpn-fabric
   device: frr
   module: [vlan, vxlan, bgp, evpn, fabric]

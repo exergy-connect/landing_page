@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Edit a network topology inside an article, then launch it as an interactive lab.">
+  <title>Edit, launch, explore · Exergy ∞ lab.net</title>
+  <style>
+    :root { color-scheme:dark; font:16px/1.7 system-ui,sans-serif; color:#e4edf5; background:#0b111a; --lab-background:#101c2a; --lab-color:#e4edf5; --lab-node:#1c3044; --lab-border:#334d63; --lab-link:#5eead4; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    main { width:min(100% - 40px,1080px); margin:32px auto 80px; }
+    a { color:#7ce8d7; text-underline-offset:4px; }
+    nav { display:flex; align-items:center; gap:12px; font-size:14px; }
+    nav img { width:32px; height:32px; }
+    header { max-width:760px; margin:64px 0 36px; }
+    .eyebrow { color:#5eead4; font:12px ui-monospace,monospace; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { font-size:clamp(32px,5vw,54px); line-height:1.12; letter-spacing:-.04em; margin:16px 0 24px; }
+    h2 { font-size:24px; letter-spacing:-.02em; margin:0 0 12px; }
+    p { color:#aebed0; }
+    .editor { border:1px solid #334d63; border-radius:14px; overflow:hidden; background:#101c2a; }
+    .toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:16px; }
+    label { font-size:14px; font-weight:600; }
+    select,button { font:inherit; border-radius:7px; border:1px solid #405b73; padding:9px 12px; }
+    select { color:inherit; background:#162638; max-width:100%; flex:1; min-width:180px; }
+    button { cursor:pointer; font-weight:650; color:#06251e; background:#5eead4; border-color:#5eead4; }
+    button:disabled { opacity:.5; cursor:not-allowed; color:#aebed0; background:transparent; border-color:#71869b; border-style:dashed; box-shadow:none; }
+    textarea { display:block; width:100%; min-height:420px; resize:vertical; border:0; border-top:1px solid #334d63; border-bottom:1px solid #334d63; border-radius:0; padding:22px; font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; color:#d9e8f4; background:#0b141f; tab-size:2; }
+    textarea:focus-visible,select:focus-visible,button:focus-visible { outline:2px solid #5eead4; outline-offset:-2px; }
+    .editor-footer { display:flex; align-items:center; flex-wrap:wrap; gap:12px; padding:12px 16px; font-size:13px; }
+    #source-link { overflow-wrap:anywhere; }
+    #editor-status { flex:1; color:#aebed0; }
+    #error { color:#ffb4ad; white-space:pre-wrap; overflow-wrap:anywhere; }
+    #lab-instructions { margin:20px 0; }
+    #lab-instructions summary { cursor:pointer; }
+    [data-instructions] { white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.7 ui-monospace,monospace; margin-top:12px; }
+    #result { margin-top:48px; }
+    #lab-status { font-size:14px; }
+    .validation-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:14px; margin:24px 0 8px; }
+    #validation-log { padding-left:24px; font:13px/1.7 ui-monospace,monospace; overflow-wrap:anywhere; }
+    #validation-log li { margin:8px 0; white-space:pre-wrap; }
+    #validation-log [data-result=pass] { color:#7ce8d7; }
+    #validation-log [data-result=fail] { color:#ffb4ad; }
+    footer { margin-top:48px; border-top:1px solid #24384a; padding-top:20px; font-size:13px; color:#aebed0; }
+    [hidden] { display:none!important; }
+    @media(max-width:600px) { main { width:calc(100% - 24px); } header { margin-top:40px; } textarea { padding:14px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <nav><a href="./"><img src="./favicon.svg" alt="Exergy ∞ lab.net"></a><span>Exergy ∞ lab.net / Experimental notebook</span></nav>
+    <article>
+      <header>
+        <p class="eyebrow">An article you can experiment with</p>
+        <h1>Pick a topology. Change it.<br>Then launch your network.</h1>
+        <p>A network diagram is a starting point. Pick a lab, edit its topology here, and see what your changes do in a running network below.</p>
+      </header>
+      <section aria-labelledby="edit-heading">
+        <h2 id="edit-heading">1. Make it your own</h2>
+        <p>Try changing an address, adding a link, or moving a router to another AS. The editor contains the topology and addressing sections; Launch runs your current edits.</p>
+        <p id="catalog-status" role="status">Repository lists load in the background.</p>
+        <details id="lab-instructions" hidden><summary>Lab instructions</summary><div data-instructions></div></details>
+        <div class="editor">
+          <div class="toolbar"><label for="source">Example lab</label><select id="source" disabled><option>Loading examples…</option></select></div>
+          <label for="topology" class="toolbar">Editable topology · YAML / .xp</label>
+          <textarea id="topology" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="editor-status" disabled></textarea>
+          <div class="editor-footer"><a id="source-link" hidden>Original source ↗</a><span id="editor-status" role="status">Loading examples/index.json…</span><lab-controls id="capture-controls" controls="capture" compact></lab-controls><button id="launch" type="button" disabled>Launch</button></div>
+        </div>
+        <p id="error" role="alert" hidden></p>
+      </section>
+      <section id="result" aria-labelledby="run-heading" hidden>
+        <h2 id="run-heading">2. Explore the result</h2>
+        <p>Click a node to inspect its routes, or click a link to break it. Edit the source above and launch again to try another version.</p>
+        <p id="lab-status" role="status"></p>
+        <lab-embed hide-instructions controls="start pause reset ping"></lab-embed>
+        <div class="validation-toolbar"><button id="validate" type="button" disabled>Validate</button><span id="validation-status" role="status">Launch a lab to run its validation steps.</span></div>
+        <p>Validation checks the launched version of the lab, including its Netlab validation steps.</p>
+        <ol id="validation-log" aria-label="Validation results" aria-live="polite" aria-relevant="additions"></ol>
+      </section>
+    </article>
+    <footer>Runs in your browser. <a href="./blog.html">Read the original interactive article →</a><span>© 2026 Exergy LLC. All rights reserved.</span></footer>
+  </main>
+  <script type="module" src="./experimental.js"></script>
+</body>
+</html>

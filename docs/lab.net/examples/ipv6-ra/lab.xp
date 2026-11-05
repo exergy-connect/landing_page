@@ -9,10 +9,8 @@ headline: "IPv6 router advertisements"
 # Hosts already have stable globals (::10). The advertisement installs ::/0
 # via r1's link-local, and h1 reaches h2 through that default route.
 
-_id: ipv6-ra
 
 topology:
-  _concept: topology
   name: ipv6-ra
   module: [vlan]
   device: frr

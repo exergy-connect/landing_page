@@ -8,10 +8,8 @@ headline: "OSPF with client ping"
 # Single-area IPv4 OSPF: passive host subnets, numbered router adjacency.
 # C/WASM handles packets, database exchange, flooding, SPF, and protocol timers.
 
-_id: ospf
 
 topology:
-  _concept: topology
   device: frr
   module: [ospf]
   name: ospf

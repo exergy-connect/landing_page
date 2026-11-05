@@ -9,10 +9,8 @@ headline: "Static VXLAN"
 # r1 and r2 are VTEPs and ingress-replicate that VLAN across the underlay.
 # The VTEP address is each router's underlay interface address.
 
-_id: vxlan
 
 topology:
-  _concept: topology
   name: vxlan
   module: [vlan, vxlan]
   device: frr

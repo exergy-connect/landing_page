@@ -10,10 +10,8 @@ headline: "Bridged, IRB, and routed VLANs"
 # app1 sits in an IRB VLAN; r1 routes it through irb20.
 # r1—r2 is a routed VLAN (tagged /30, no bridging). client pings app1 after BGP.
 
-_id: vlan-modes
 
 topology:
-  _concept: topology
   name: vlan-modes
   module: [vlan, bgp]
   device: frr

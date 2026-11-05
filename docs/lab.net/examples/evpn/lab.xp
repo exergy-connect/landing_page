@@ -10,10 +10,8 @@ headline: "EVPN VXLAN"
 # their BGP session is up, and advertise host MACs as MAC/IP routes.
 # Unknown unicast is not flooded.
 
-_id: evpn
 
 topology:
-  _concept: topology
   name: evpn
   module: [vlan, vxlan, bgp, evpn]
   device: frr

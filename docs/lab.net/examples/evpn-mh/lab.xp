@@ -5,7 +5,6 @@ summary: "h1 bonds its links to r1 and r2 in one all-active Ethernet Segment. Di
 eyebrow: "EXERGY-LAB.NET LAB 11"
 headline: "EVPN multihoming with host LAG"
 
-_id: evpn-mh
 # h1 bonds two access links to different VTEPs in the same Ethernet Segment.
 # h2 is single-homed on r3. Disable either h1 uplink to exercise failover.
 topology:

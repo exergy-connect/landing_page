@@ -9,10 +9,7 @@ headline: "eBGP with client ping"
 # client1 -- r1 (AS 65001) --eBGP-- r2 (AS 65002) -- client2
 # Browser: device:frr → JS+WASM BGP; device:linux → pure-JS host (ICMP after FIB).
 
-_id: ebgp-icmp
-
 topology:
-  _concept: topology
   device: frr
   module: [bgp]
   name: ebgp-icmp

@@ -9,10 +9,8 @@ headline: "iBGP, eBGP, and next-hop-self"
 # Uses interface-based iBGP (permitted by the original test), without the
 # Netlab test harness, platform adjustments, or passive-session plugin.
 
-_id: netlab-02-ibgp-ebgp-session
 
 topology:
-  _concept: topology
   name: netlab-02-ibgp-ebgp-session
   device: frr
   module: [bgp, ospf]

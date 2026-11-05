@@ -9,10 +9,7 @@ headline: "Leaf-and-spine fabric"
 # the underlay. Each host link names who connects to whom. Subnets, defaults,
 # and the prefix each leaf originates are derived. h1 reaches h2 across a spine.
 
-_id: fabric
-
 topology:
-  _concept: topology
   name: fabric
   device: frr
   module: [bgp, fabric]

@@ -8,10 +8,8 @@ headline: "Two-router BGP"
 # Foundation demo: two eBGP peers over a virtual byte stream.
 # The browser instantiates device: frr nodes as JS wrappers around the BGP WASM core.
 
-_id: two-router
 
 topology:
-  _concept: topology
   device: frr
   module: [bgp]
   name: two-router
