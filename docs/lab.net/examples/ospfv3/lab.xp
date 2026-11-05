@@ -9,6 +9,10 @@ headline: "OSPFv3 with IPv6 client ping"
 
 _id: ospfv3
 
+addressing:
+  p2p: { ipv4: false, ipv6: '2001:db8:2::/48', prefix6: 64 }
+  lan: { ipv4: false, ipv6: '2001:db8:1::/48', prefix6: 64 }
+
 topology:
   _concept: topology
   device: frr
@@ -18,83 +22,55 @@ topology:
   nodes:
     r1:
       device: frr
-      ospf: false
-      ospfv3:
+      ospf:
         router_id: 10.255.0.1
     r2:
       device: frr
-      ospf: false
-      ospfv3:
+      ospf:
         router_id: 10.255.0.2
     client1:
       device: linux
       role: host
-      routing:
-        static:
-          - ipv6: ::/0
-            nexthop: 2001:db8:1::1
       validation:
         actions:
           - label: ping client2
             type: ping
-            target: 2001:db8:3::2
+            target: client2.ipv6
             count: 3
     client2:
       device: linux
       role: host
-      routing:
-        static:
-          - ipv6: ::/0
-            nexthop: 2001:db8:3::1
 
   links:
     - interfaces:
         - node: client1
-          ifname: eth1
-          ipv6: 2001:db8:1::2/64
         - node: r1
-          ifname: eth1
-          ipv6: 2001:db8:1::1/64
       type: p2p
-      prefix:
-        ipv6: 2001:db8:1::0/64
     - interfaces:
         - node: r1
-          ifname: eth2
-          ipv6: 2001:db8:2::1/64
         - node: r2
-          ifname: eth1
-          ipv6: 2001:db8:2::2/64
       type: p2p
-      prefix:
-        ipv6: 2001:db8:2::0/64
     - interfaces:
         - node: r2
-          ifname: eth2
-          ipv6: 2001:db8:3::1/64
         - node: client2
-          ifname: eth1
-          ipv6: 2001:db8:3::2/64
       type: p2p
-      prefix:
-        ipv6: 2001:db8:3::0/64
 
   validate:
     - label: r1 has both client subnets
       state:
         - node: r1
           routes:
-            - prefix: 2001:db8:1::/64
+            - prefix: client1.prefix
               protocol: connected
-            - prefix: 2001:db8:3::/64
+            - prefix: client2.prefix
               protocol: ospfv3
     - label: r2 has both client subnets
       state:
         - node: r2
           routes:
-            - prefix: 2001:db8:3::/64
+            - prefix: client2.prefix
               protocol: connected
-            - prefix: 2001:db8:1::/64
+            - prefix: client1.prefix
               protocol: ospfv3
     - label: hosts have a default toward their router
       state:
@@ -102,17 +78,17 @@ topology:
           routes:
             - prefix: ::/0
               protocol: static
-              nexthop: 2001:db8:1::1
+              nexthop: r1.ipv6.client1
         - node: client2
           routes:
             - prefix: ::/0
               protocol: static
-              nexthop: 2001:db8:3::1
+              nexthop: r2.ipv6.client2
     - label: client1 reaches client2
       packet:
         from: client1
         type: icmp-echo
-        target: 2001:db8:3::2
+        target: client2.ipv6
         expect:
           type: icmp-echo-reply
           from: client2

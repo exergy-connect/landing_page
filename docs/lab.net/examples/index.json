@@ -21,6 +21,7 @@
     "bgp-confederation/lab.xp",
     "browser-twin/lab.xp",
     "srv6/lab.xp",
+    "srv6/static-usid.xp",
     "netlab/02-ibgp-ebgp-session.xp"
   ],
   "repos": [

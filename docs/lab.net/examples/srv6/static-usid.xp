@@ -1,0 +1,88 @@
+---
+id: static-usid
+title: Static SRv6 uSID steering
+summary: Two static policies steer IPv6 pings over different branches of a diamond using packed uSIDs.
+eyebrow: STATIC SRV6 / USID
+headline: Choose the path with micro-segments
+
+# Browser lab; no BGP or IGP. Locator reachability comes from the static SRv6
+# underlay. The /32 block leaves six 16-bit uSID slots in an IPv6 destination.
+#
+#        r2 (0002)
+#       /         \
+# r1 (0001)      r4 (0004)
+#       \         /
+#        r3 (0003)
+#
+# Policy via entries reference node locators; packed destinations are derived.
+# Ping r4's first loopback through r2, its second through r3. Replies use r3.
+# Node inspector commands on r1:
+#   ping 2001:db8:40::1
+#   ping 2001:db8:40::2
+# Validate additionally checks encapsulation, uSID advancement, and decapsulation
+# locations: a successful ping over an unintended path fails validation.
+topology:
+  name: Static SRv6 uSID diamond
+  module: [srv6]
+  addressing:
+    p2p: {ipv4: false, ipv6: "2001:db8:100::/48", prefix6: 64}
+  srv6:
+    transport: [static]
+    usid_block: fc00::/32
+  nodes:
+    r1:
+      device: frr
+      loopback: {ipv6: '2001:db8:10::1/128'}
+      srv6:
+        usd: true
+        policy:
+          - {ipv6: 'r4.loopbacks[0].ipv6', via: [r2, r4]}
+          - {ipv6: 'r4.loopbacks[1].ipv6', via: [r3, r4]}
+    r2:
+      device: frr
+    r3:
+      device: frr
+    r4:
+      device: frr
+      loopbacks:
+        - {ipv6: '2001:db8:40::1/128'}
+        - {ipv6: '2001:db8:40::2/128'}
+      srv6:
+        usd: true
+        policy:
+          - {ipv6: r1.loopback.ipv6, via: [r3, r1]}
+  links: [r1-r2, r2-r4, r1-r3, r3-r4]
+  validate:
+    - label: Ping first loopback via r2, reply via r3
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:40::1
+        srv6:
+          - {at: r1, action: encap}
+          - {at: r2, action: advance}
+          - {at: r4, action: decap}
+        expect:
+          type: icmp-echo-reply
+          from: r4
+          srv6:
+            - {at: r4, action: encap}
+            - {at: r3, action: advance}
+            - {at: r1, action: decap}
+    - label: Ping second loopback via r3, reply via r3
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:40::2
+        srv6:
+          - {at: r1, action: encap}
+          - {at: r3, action: advance}
+          - {at: r4, action: decap}
+        expect:
+          type: icmp-echo-reply
+          from: r4
+          srv6:
+            - {at: r4, action: encap}
+            - {at: r3, action: advance}
+            - {at: r1, action: decap}
+---

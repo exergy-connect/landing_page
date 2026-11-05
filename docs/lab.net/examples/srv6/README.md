@@ -74,3 +74,37 @@ The smoke test discovers host IPv4 addresses from their access interfaces.
 The helper requires a Linux kernel with SRv6 End.DT4/VRF support and appropriate
 container networking capabilities. No native deployment is performed by the
 repository's unit tests.
+
+## Static uSID browser lab
+
+Open **Static SRv6 uSID steering** (`static-usid.xp`) in the example selector.
+This browser-only diamond uses no BGP or IGP. Static locator routes provide
+underlay reachability; explicit policies select packed 16-bit uSIDs in the
+`fc00::/32` block. Locators are allocated automatically as /48s from the global block, reserving
+the zero slot. An `addressing.srv6_locator` pool or `srv6.locator_pool` can
+override the pool; explicit node locators are preserved and reserved. Without
+a configured pool or block, the default is Netlab’s `5f00::/16`.
+Each node’s uSID is derived from its locator; for example,
+`fc00:0:2::/48` contributes `0002`, so no separate numeric `usid` is needed.
+
+Run these commands in r1's node inspector:
+
+```text
+ping 2001:db8:40::1
+ping 2001:db8:40::2
+```
+
+Policies use `via: [r2, r4]` or `via: [r3, r4]`; the packed destination is
+derived from the referenced node locators. Renumbering a node does not require
+editing policy SIDs or validation expectations. Policy destinations reference
+`r4.loopbacks[0].ipv6` and `r4.loopbacks[1].ipv6`; the reply policy references
+`r1.loopback.ipv6`. Locally originated steered pings use r1’s loopback as their
+source, keeping the reply policy independent of underlay addresses.
+
+The first request uses `fc00:0:2:4::` and advances at r2 before r4 decapsulates.
+The second uses `fc00:0:3:4::` and advances at r3. Both replies use
+`fc00:0:3:1::`, returning through r3 to r1. **Validate** checks request events under `packet.srv6` and reply events
+under `packet.expect.srv6`, each in order, so reaching the destination along a different policy does not pass.
+Packet capture shows IPv6-in-IPv6 encapsulation and the changing outer destination.
+This example implements a /32 block with 16-bit node uSIDs and final End.DT6;
+it does not use BGP service SIDs or an SRH segment list.
