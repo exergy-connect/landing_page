@@ -29,6 +29,9 @@ instructions: |
   MED is compared here because both paths come from the same neighboring AS.
   client2 always uses edge1 as its default gateway, so echo replies use edge1
   in every stage. Stage 2 deliberately demonstrates asymmetric traffic flow.
+  edge1 also keeps a static route for 192.0.2.0/24 via edge2 at distance 250.
+  eBGP (distance 20) wins while the r1 session is up. With r1–edge1 down, that
+  static is installed and replies go client2 -> edge1 -> edge2 -> r1.
 
   Validation below describes stage 1 (also the winning next hop in stage 3).
   For stage 2 change the destination-route nexthop check to edge2.ipv4.r1.
@@ -55,6 +58,11 @@ topology:
       bgp:
         as: 65002
         advertise: [203.0.113.0/24]
+      routing:
+        static:
+          - ipv4: client1.prefix
+            nexthop: edge2.ipv4.lan
+            distance: 250
     edge2:
       bgp:
         as: 65002

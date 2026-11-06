@@ -1,0 +1,168 @@
+---
+id: neighbor-policies
+title: BGP neighbor routing policies
+summary: Apply import and export policies to individual BGP neighbors.
+headline: Filter routes and choose an exit
+
+instructions: |
+  Both edges advertise the server LAN. r1 imports edge2 routes with local
+  preference 200, so client1's ping uses edge2 despite its higher MED.
+  edge1's export policy sets MED and a community only on the server prefix.
+  Other routes are permitted by the final catch-all clause.
+
+  Experiments: edit the policy, then Reset/Launch.
+  1. Change prefer-server's local preference to 50: traffic uses edge1.
+  2. Change its first clause to action: deny: r1 uses edge1 for the server LAN.
+  3. Remove the final permit clause to see implicit deny filter other prefixes.
+  Inspect BGP routes to see the communities, MED, and local preference.
+
+topology:
+  name: neighbor-policies
+  device: frr
+  module: [bgp]
+  plugin: [bgp.policy]
+  bgp:
+    sessions:
+      ipv4: [ebgp]
+      ipv6: []
+
+  routing:
+    prefix:
+      server: {ipv4: &server-prefix 203.0.113.0/24}
+    policy:
+      prefer-server:
+        - match: {prefix: server}
+          set: {locpref: 200}
+        - action: permit
+      tag-server:
+        - match: {prefix: server}
+          set:
+            med: 10
+            community: {standard: ['65002:7']}
+        - action: permit
+
+  nodes:
+    lan:
+      device: switch
+      role: switch
+    r1:
+      bgp:
+        as: 65001
+        locpref: 100
+    edge1:
+      bgp:
+        as: &edge-as 65002
+        advertise: [*server-prefix]
+      routing:
+        static:
+          - ipv4: client1.prefix
+            nexthop: edge2.ipv4.lan
+            distance: 250
+    edge2:
+      bgp:
+        as: *edge-as
+        advertise: [*server-prefix]
+    client1:
+      device: linux
+      role: host
+      validation:
+        actions:
+          - label: Follow ICMP to client2
+            type: ping
+            target: client2
+            count: 5
+    client2:
+      device: linux
+      role: host
+      routing:
+        static:
+          - ipv4: 0.0.0.0/0
+            nexthop: edge1.ipv4.lan
+      validation:
+        actions:
+          - label: Ping back to client1
+            type: ping
+            target: client1
+            count: 3
+
+  links:
+    - interfaces:
+        - node: r1
+        - node: edge1
+          bgp:
+            policy: {out: tag-server}
+    - interfaces:
+        - node: r1
+          bgp:
+            policy: {in: prefer-server}
+        - node: edge2
+          bgp:
+            med: 50
+    - prefix:
+        ipv4: 192.0.2.0/24
+      interfaces:
+        - node: r1
+          ipv4: 192.0.2.1/24
+        - node: client1
+          ipv4: 192.0.2.10/24
+    - prefix:
+        ipv4: *server-prefix
+      interfaces:
+        - node: edge1
+          ipv4: 203.0.113.1/24
+        - node: lan
+          ipv4: false
+    - prefix:
+        ipv4: *server-prefix
+      interfaces:
+        - node: edge2
+          ipv4: 203.0.113.2/24
+        - node: lan
+          ipv4: false
+    - prefix:
+        ipv4: *server-prefix
+      interfaces:
+        - node: client2
+          ipv4: 203.0.113.10/24
+        - node: lan
+          ipv4: false
+
+  validate:
+    - label: Both eBGP paths are available
+      state:
+        - node: r1
+          bgp:
+            - peer: edge1
+              asn: edge1.asn
+              state: established
+            - peer: edge2
+              asn: edge2.asn
+              state: established
+    - label: Import policy selects edge2 with higher local preference
+      state:
+        - node: r1
+          routes:
+            - prefix: client2.prefix
+              protocol: bgp
+              nexthop: edge2.ipv4.r1
+    - label: Both edges have a return route to client1
+      state:
+        - node: edge1
+          routes:
+            - prefix: client1.prefix
+              protocol: bgp
+              nexthop: r1.ipv4.edge1
+        - node: edge2
+          routes:
+            - prefix: client1.prefix
+              protocol: bgp
+              nexthop: r1.ipv4.edge2
+    - label: ICMP reaches client2 and returns
+      packet:
+        from: client1
+        type: icmp-echo
+        target: client2.ipv4
+        expect:
+          type: icmp-echo-reply
+          from: client2
+---

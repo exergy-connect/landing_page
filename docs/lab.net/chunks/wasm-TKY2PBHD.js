@@ -1,0 +1,1 @@
+async function r(e={}){let t=e.locateFile?e.locateFile("exergy-lab.net.js"):"./exergy-lab.net.js",a=new URL(t,globalThis.location?.href??import.meta.url),{default:l}=await import(a.href);return l(e)}export{r as default};

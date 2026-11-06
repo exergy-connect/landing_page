@@ -6,6 +6,7 @@
     "ebgp-icmp/lab.xp",
     "ebgp-icmp/bfd.xp",
     "bgp/med-localpref.xp",
+    "bgp/neighbor-policies.xp",
     "vlan-modes/lab.xp",
     "gateway/lab.xp",
     "ipv6-ra/lab.xp",
