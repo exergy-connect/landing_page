@@ -121,7 +121,7 @@ topology:
           loopbacks:
             - pool: loopback
           bgp:
-            as: "{65300 + count}"
+            as: 65001
             rr: true
         leaf:
           name: L{pod}-{name}-{rack}-{count}

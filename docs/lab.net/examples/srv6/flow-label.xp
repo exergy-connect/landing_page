@@ -1,0 +1,139 @@
+---
+id: srv6-flow-label
+title: SRv6 flow label ECMP
+summary: Equal-cost paths share one outer destination. The IPv6 flow label selects the path, and End.X pins an adjacency.
+eyebrow: SRV6 / FLOW LABEL
+headline: Hash the flow label, not only the destination
+
+# Browser lab. No SRH and no BGP. r1 encapsulates. r2's End SID rewrites the
+# destination to r5's End SID, then two equal paths remain:
+#
+#   r1 -- r2 -- r3 -- r5
+#          \         /
+#           -- r4 --
+#
+# Paths are ordered by peer name. The member is the outer flow label modulo
+# the path count. Label 0 and label 2 use r3. Label 1 uses r4. Label 0 on
+# every flow is the imbalance case: one outer destination, one path.
+# End.X toward r3 pins that adjacency for any flow label. r5 End decapsulates.
+topology:
+  name: SRv6 flow label ECMP
+  module: [srv6]
+  animate: ip.flowLabel
+  addressing:
+    p2p: {ipv4: false, ipv6: "2001:db8:100::/48", prefix6: 64}
+  srv6:
+    transport: [static]
+  nodes:
+    r1:
+      device: frr
+      loopback: {ipv6: '2001:db8:1::1/128'}
+      srv6:
+        locator: fc00:0:1::/48
+        endpoint:
+          - {name: end, behavior: End}
+        policy:
+          - {ipv6: 'r5.loopbacks[0].ipv6', behavior: End, at: r2}
+          - {ipv6: 'r5.loopbacks[1].ipv6', behavior: End.X, at: r2, xconnect: r3}
+    r2:
+      device: frr
+      srv6:
+        locator: fc00:0:2::/48
+        endpoint:
+          - {name: end, behavior: End, next: r5}
+          - {name: to-r3, behavior: End.X, via: r3, next: r5}
+    r3:
+      device: frr
+      srv6: {locator: fc00:0:3::/48}
+    r4:
+      device: frr
+      srv6: {locator: fc00:0:4::/48}
+    r5:
+      device: frr
+      loopbacks:
+        - {ipv6: '2001:db8:50::1/128'}
+        - {ipv6: '2001:db8:50::2/128'}
+      srv6:
+        locator: fc00:0:5::/48
+        endpoint:
+          - {name: end, behavior: End}
+        policy:
+          - {ipv6: r1.loopback.ipv6, behavior: End, at: r1}
+  links: [r1-r2, r2-r3, r2-r4, r3-r5, r4-r5]
+  validate:
+    - label: Flow label 0 shares the first ECMP path
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:50::1
+        flowLabel: 0
+        srv6:
+          - {at: r1, action: encap, flowLabel: 0}
+          - {at: r2, action: advance, behavior: End}
+          - {at: r5, action: decap, behavior: End}
+        ecmp:
+          - {at: r2, via: r3, flowLabel: 0}
+        expect:
+          type: icmp-echo-reply
+          from: r5
+          srv6:
+            - {at: r5, action: encap}
+            - {at: r1, action: decap, behavior: End}
+    - label: Flow label 1 takes the other ECMP path
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:50::1
+        flowLabel: 1
+        srv6:
+          - {at: r1, action: encap, flowLabel: 1}
+          - {at: r2, action: advance, behavior: End}
+          - {at: r5, action: decap, behavior: End}
+        ecmp:
+          - {at: r2, via: r4, flowLabel: 1}
+        expect:
+          type: icmp-echo-reply
+          from: r5
+          srv6:
+            - {at: r5, action: encap}
+            - {at: r1, action: decap, behavior: End}
+    - label: Flow label 2 collides with flow label 0
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:50::1
+        flowLabel: 2
+        ecmp:
+          - {at: r2, via: r3, flowLabel: 2}
+        expect:
+          type: icmp-echo-reply
+          from: r5
+    - label: End.X pins r3 for flow label 0
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:50::2
+        flowLabel: 0
+        srv6:
+          - {at: r1, action: encap, flowLabel: 0}
+          - {at: r2, action: xconnect, behavior: End.X, via: r3}
+          - {at: r5, action: decap, behavior: End}
+        ecmp: []
+        expect:
+          type: icmp-echo-reply
+          from: r5
+    - label: End.X pins r3 for flow label 1
+      packet:
+        type: icmp-echo
+        from: r1
+        target: 2001:db8:50::2
+        flowLabel: 1
+        srv6:
+          - {at: r1, action: encap, flowLabel: 1}
+          - {at: r2, action: xconnect, behavior: End.X, via: r3}
+          - {at: r5, action: decap, behavior: End}
+        ecmp: []
+        expect:
+          type: icmp-echo-reply
+          from: r5
+---

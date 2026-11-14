@@ -108,3 +108,26 @@ under `packet.expect.srv6`, each in order, so reaching the destination along a d
 Packet capture shows IPv6-in-IPv6 encapsulation and the changing outer destination.
 This example implements a /32 block with 16-bit node uSIDs and final End.DT6;
 it does not use BGP service SIDs or an SRH segment list.
+
+## Flow label and ECMP
+
+Open **SRv6 flow label ECMP** (`flow-label.xp`). The packet has no SRH.
+Its `topology.animate: ip.flowLabel` setting shows the outer flow label on
+packet badges, so the label can be followed along the selected ECMP path.
+r1 encapsulates to r2. r2's End SID rewrites the destination to r5's End SID
+and the underlay then has two equal paths, r3 and r4. Paths are ordered by
+peer name. The member is the outer flow label modulo the path count, so
+label 0 and label 2 leave r2 toward r3, and label 1 leaves toward r4.
+The same outer destination with flow label 0 is the imbalance case.
+r2's End.X SID toward r3 pins that adjacency for both labels.
+r5's End SID decapsulates. The next SID is programmed on the endpoint
+because the packet has no SRH. **Validate** checks the flow label, the End
+and End.X events, and the selected ECMP peer.
+
+Animation follows the Ethernet hops emitted by forwarding. Each complete
+packet sequence, including neighbor discovery and the echo reply, finishes
+before the next sequence starts. Echo request/reply
+badges include their on-wire ICMP identifier and sequence number, including
+inside IPv6-in-IP encapsulation. Validate sends several distinct probes: the
+ECMP request with label 1 uses r4, while the End.X request with label 1 uses r3.
+The reply is a separate packet with its own IPv6 flow label (0 here).
