@@ -1,0 +1,1 @@
+var r=["frr","eos","srlinux","cjunosevolved","ios-xr","bird","sonic-vs","vyos","vpp","nxos","iosxe","junos"],o=e=>typeof e=="string"?e:e?.type,s=e=>["lab.net","exergy-lab","exergy-lab.net"].includes(o(e)),t=e=>s(e)?"frr":o(e),n=e=>r.includes(t(e)),p=e=>s(e)?e?.controllers??[]:[];export{r as a,o as b,t as c,n as d,p as e};

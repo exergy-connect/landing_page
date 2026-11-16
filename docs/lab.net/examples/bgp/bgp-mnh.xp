@@ -1,0 +1,155 @@
+---
+id: bgp-mnh
+title: BGP MultiNexthop over MPLS
+summary: Route reflectors combine four egress paths into weighted MPLS next hops with weights 1:2:3:4.
+headline: Four weighted exits through a BGP-free core
+
+instructions: |
+  Send traffic from ingress PEs r3 and r4 to the Internet feed on r0.
+
+              r11 (10 Gbps) --+
+              r12 (20 Gbps) --+                +-- rr1
+  r0 -------- r13 (30 Gbps) --+-- p1 ----------+-- rr2
+  AS 65100    r14 (40 Gbps) --+                +-- r3, r4
+                     AS 65000
+
+  r0 peers with all four egress PEs. The PEs attach link-bandwidth communities
+  to imported routes. Only rr1 and rr2 send MNH; all PEs use receive-only mode.
+  Each ingress installs the four egress loopbacks with weights 1:2:3:4.
+  Receiving the same set from two reflectors does not double its capacity.
+
+  This example runs in the browser without requiring deployed containers.
+  Launch and run Validate after BGP converges. Validation checks the sessions,
+  weighted next hops, return routes, and pings from both ingress loopbacks.
+  The weight checks read the live ingress FIBs. MPLS transports packets across
+  p1, which runs OSPF without BGP. The reflectors are outside the data path.
+
+  Experiments:
+  1. Disable r0-r14: the remaining exits have weights 1:2:3. The four-exit
+     validation deliberately fails until you restore the link and reconverge.
+  2. Disable rr1-p1: rr2 retains the complete next-hop set and pings still work.
+     The session validation reports the failed reflector until it is restored.
+  3. Change an external link's bandwidth and Reset/Launch to recompute weights.
+     Update the expected weights below to match your new bandwidth ratios.
+
+  A single flow stays on one exit; 10/20/30/40 percent describes aggregate
+  traffic over many independent flows. Reverse traffic follows ordinary BGP.
+  Static MPLS labels are 16000 + node id; this example does not run LDP.
+  The IPv4 lab MNH profile uses experimental attribute code 254. For native
+  Linux deployment, use updated controller/dataplane assets and load the host's
+  mpls_router and mpls_iptunnel modules before starting the lab.
+
+topology:
+  name: bgp-mnh
+  device: frr
+  module: [bgp, ospf, mpls]
+  bgp:
+    as: 65000
+  ospf:
+    area: 0.0.0.0
+
+  nodes:
+    r0:
+      module: [bgp]
+      bgp:
+        as: 65100
+      loopback:
+        ipv4: 192.168.255.10/32
+    r11:
+      bgp: {mnh: receive}
+      mpls: &transport {ldp: false, static: true}
+    r12:
+      bgp: {mnh: receive}
+      mpls: *transport
+    r13:
+      bgp: {mnh: receive}
+      mpls: *transport
+    r14:
+      bgp: {mnh: receive}
+      mpls: *transport
+    p1:
+      module: [ospf, mpls]
+      mpls: *transport
+    rr1:
+      bgp: {rr: true, mnh: send, next_hop_self: false}
+      mpls: *transport
+    rr2:
+      bgp: {rr: true, mnh: send, next_hop_self: false}
+      mpls: *transport
+    r3:
+      bgp: {mnh: receive}
+      mpls: *transport
+      loopback:
+        ipv4: 198.51.100.3/32
+    r4:
+      bgp: {mnh: receive}
+      mpls: *transport
+      loopback:
+        ipv4: 198.51.100.4/32
+
+  links:
+    # External interface bandwidth is in Mbps.
+    - interfaces:
+        - {node: r0, bandwidth: 10000, ospf: false}
+        - {node: r11, bandwidth: 10000, ospf: false}
+    - interfaces:
+        - {node: r0, bandwidth: 20000, ospf: false}
+        - {node: r12, bandwidth: 20000, ospf: false}
+    - interfaces:
+        - {node: r0, bandwidth: 30000, ospf: false}
+        - {node: r13, bandwidth: 30000, ospf: false}
+    - interfaces:
+        - {node: r0, bandwidth: 40000, ospf: false}
+        - {node: r14, bandwidth: 40000, ospf: false}
+    - interfaces: [{node: r11}, {node: p1}]
+    - interfaces: [{node: r12}, {node: p1}]
+    - interfaces: [{node: r13}, {node: p1}]
+    - interfaces: [{node: r14}, {node: p1}]
+    - interfaces: [{node: rr1}, {node: p1}]
+    - interfaces: [{node: rr2}, {node: p1}]
+    - interfaces: [{node: r3}, {node: p1}]
+    - interfaces: [{node: r4}, {node: p1}]
+
+  validate:
+    - label: Both reflectors serve all ingress and egress PEs
+      state:
+        - node: r11
+          bgp: &reflectors
+            - {peer: rr1, asn: 65000, state: established}
+            - {peer: rr2, asn: 65000, state: established}
+        - {node: r12, bgp: *reflectors}
+        - {node: r13, bgp: *reflectors}
+        - {node: r14, bgp: *reflectors}
+        - {node: r3, bgp: *reflectors}
+        - {node: r4, bgp: *reflectors}
+    - label: All four egress PEs peer with the Internet feed
+      state:
+        - node: r11
+          bgp: &feed
+            - {peer: r0, asn: 65100, state: established}
+        - {node: r12, bgp: *feed}
+        - {node: r13, bgp: *feed}
+        - {node: r14, bgp: *feed}
+    - label: Both ingress PEs install weights 1 to 2 to 3 to 4
+      state:
+        - node: r3
+          routes: &weighted_exits
+            - {prefix: 192.168.255.10/32, protocol: bgp, nexthop: r11.loopback, weight: 1}
+            - {prefix: 192.168.255.10/32, protocol: bgp, nexthop: r12.loopback, weight: 2}
+            - {prefix: 192.168.255.10/32, protocol: bgp, nexthop: r13.loopback, weight: 3}
+            - {prefix: 192.168.255.10/32, protocol: bgp, nexthop: r14.loopback, weight: 4}
+        - {node: r4, routes: *weighted_exits}
+    - label: The Internet feed has return routes to both ingress loopbacks
+      state:
+        - node: r0
+          routes:
+            - {prefix: 198.51.100.3/32, protocol: bgp, aspath: '65000'}
+            - {prefix: 198.51.100.4/32, protocol: bgp, aspath: '65000'}
+    - label: Both ingress PEs reach the Internet feed over MPLS
+      plugin:
+        name: ping
+        args: [192.168.255.10]
+        options:
+          src: {ref: node.loopback.ipv4}
+      nodes: [r3, r4]
+---

@@ -5,6 +5,7 @@
     "two-router/lab.xp",
     "ebgp-icmp/lab.xp",
     "ebgp-icmp/bfd.xp",
+    "bgp/bgp-mnh.xp",
     "bgp/med-localpref.xp",
     "bgp/neighbor-policies.xp",
     "vlan-modes/lab.xp",

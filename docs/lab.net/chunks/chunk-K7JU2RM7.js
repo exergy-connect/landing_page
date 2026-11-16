@@ -1,0 +1,1 @@
+async function r(){return null}function t(){return null}function a(){return[]}function c(e){return e}function n(){throw new Error("Backend connections are unavailable in this browser-only build")}var i=n,l=n,s=n,o=class{constructor(){n()}};export{r as a,t as b,a as c,c as d,i as e,l as f,s as g,o as h};
