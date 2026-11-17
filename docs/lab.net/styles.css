@@ -482,8 +482,7 @@ button { border:0; border-radius:9px; background:var(--green); color:#042f2e; pa
 .vlan-stage .router .device-router-id { font-size:12px; color:#a9bdcf; }
 .vlan-stage .router.external { border-style:dotted; }
 .vlan-stage .router.selected { border-color:var(--green); box-shadow:0 0 0 1px #2dd4bf55,0 0 24px #0d948847; }
-.interface-link-label { fill:#b9ccdf; font:10px ui-monospace,monospace; stroke:#0c121c; stroke-width:3px; paint-order:stroke; pointer-events:none; }
-.interface-link-label tspan:first-child { fill:#8298ac; font-size:9px; }
+.interface-link-label { fill:#b9ccdf; font:10px ui-monospace,monospace; stroke:#0c121c; stroke-width:3px; paint-order:stroke; pointer-events:visiblePainted; cursor:help; }
 
 .vlan-legend button.vlan-chip { cursor:pointer; color:inherit; font-weight:normal; text-align:left; }
 .vlan-legend .vlan-focus-clear { padding:4px 10px; border-radius:999px; font:12px var(--mono); line-height:normal; }
@@ -536,3 +535,24 @@ button { border:0; border-radius:9px; background:var(--green); color:#042f2e; pa
 .lab-instructions { border:1px solid var(--line); border-radius:14px; background:var(--panel); }
 .lab-instructions > summary { padding:10px 14px; cursor:pointer; }
 .lab-instructions [data-instructions] { padding:0 14px 14px; white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.7 var(--mono); }
+
+/* Keep grid node cards readable while zooming the logical coordinates. */
+.vlan-stage[data-readable-cards="true"] { overflow:visible; }
+.vlan-stage[data-readable-cards="true"] [data-node] {
+  transform:scale(var(--card-scale, 1));
+  transform-origin:center;
+}
+
+.vlan-stage[data-readable-cards="true"] .router { padding:9px 12px; border-radius:10px; }
+.vlan-stage[data-readable-cards="true"] .router .device-heading h2 { font-size:16px; }
+.vlan-stage[data-readable-cards="true"] .device-capabilities { margin-top:7px; }
+.vlan-stage[data-readable-cards="true"] .rib[hidden] { display:none; }
+.vlan-stage[data-readable-cards="true"] .vlan-link line {
+  stroke-width:calc(2px * var(--card-scale, 1));
+  stroke-opacity:.8;
+}
+.vlan-stage[data-readable-cards="true"] .vlan-link.active line {
+  stroke-width:calc(3px * var(--card-scale, 1));
+  stroke-opacity:1;
+}
+.vlan-stage[data-readable-cards="true"] .router { width:184px; }

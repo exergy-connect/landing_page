@@ -41,6 +41,7 @@ instructions: |
 
 topology:
   name: bgp-mnh
+  layout: grid
   device: frr
   module: [bgp, ospf, mpls]
   bgp:
@@ -50,38 +51,48 @@ topology:
 
   nodes:
     r0:
+      layout.grid: A6
       module: [bgp]
       bgp:
         as: 65100
       loopback:
         ipv4: 192.168.255.10/32
     r11:
+      layout.grid: H3
       bgp: {mnh: receive}
       mpls: &transport {ldp: false, static: true}
     r12:
+      layout.grid: H5
       bgp: {mnh: receive}
       mpls: *transport
     r13:
+      layout.grid: H7
       bgp: {mnh: receive}
       mpls: *transport
     r14:
+      layout.grid: H9
       bgp: {mnh: receive}
       mpls: *transport
     p1:
+      layout.grid: O6
       module: [ospf, mpls]
       mpls: *transport
     rr1:
+      layout.grid: O3
       bgp: {rr: true, mnh: send, next_hop_self: false}
       mpls: *transport
     rr2:
+      layout.grid: O9
       bgp: {rr: true, mnh: send, next_hop_self: false}
       mpls: *transport
     r3:
+      layout.grid: V5
       bgp: {mnh: receive}
       mpls: *transport
       loopback:
         ipv4: 198.51.100.3/32
     r4:
+      layout.grid: V7
       bgp: {mnh: receive}
       mpls: *transport
       loopback:
