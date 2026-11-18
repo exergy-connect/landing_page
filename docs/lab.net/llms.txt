@@ -1,0 +1,56 @@
+# lab.net
+
+> lab.net runs interactive network topology labs in the browser. The experimental notebook lets users edit a YAML topology, launch it, and run its validation steps.
+
+## Generate a shareable experimental lab
+
+Write a UTF-8 YAML document with a `topology` section. Use the supported lab.net topology syntax; do not assume every Netlab feature is implemented. Start with the examples in `examples/index.json` and their linked `.xp` files. The editor also accepts an `addressing` section and retains lab metadata and instructions supplied outside the editor.
+
+A minimal example:
+
+```yaml
+title: Two BGP routers
+summary: Two directly connected eBGP routers.
+topology:
+  name: two-router
+  device: frr
+  module: [bgp]
+  nodes:
+    r1:
+      bgp:
+        as: 65001
+    r2:
+      bgp:
+        as: 65002
+  links: [r1-r2]
+```
+
+To create a self-contained link, gzip the exact UTF-8 YAML bytes, encode them as URL-safe Base64, remove trailing `=` padding, and put the result in the `lab` fragment parameter:
+
+```text
+https://exergy-connect.com/lab.net/experimental.html#lab=<base64url-gzip>
+```
+
+For example, with Python 3, save the YAML as `lab.yaml`:
+
+```python
+import base64
+import gzip
+from pathlib import Path
+source = Path("lab.yaml").read_bytes()
+encoded = base64.urlsafe_b64encode(gzip.compress(source)).decode("ascii").rstrip("=")
+print("https://exergy-connect.com/lab.net/experimental.html#lab=" + encoded)
+```
+
+The fragment stays in the browser and is not sent in the HTTP request. The notebook also accepts a gzip artefact in `?lab=`; the fragment takes precedence. Standard Base64 and URL-safe Base64, with or without padding, are accepted. Large topologies can exceed browser, messaging, or sharing URL length limits.
+
+Open the resulting link to load the topology into the editor. The user can review and edit it, select Launch, and use Validate if the lab contains validation steps. The notebook's **Copy share link** button creates a link from the current editor contents. It serializes YAML, so comments and formatting may not be preserved.
+
+If you cannot execute the encoding, provide the YAML for the user to paste into the notebook and ask them to use Copy share link. Do not invent an encoded URL or claim a lab has been validated without running it.
+
+## References
+
+- [Experimental notebook](experimental.html)
+- [Bundled lab catalog](examples/index.json)
+- [Two-router BGP example](examples/two-router/lab.xp)
+- [eBGP and ICMP example with validation](examples/ebgp-icmp/lab.xp)

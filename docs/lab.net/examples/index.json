@@ -47,6 +47,7 @@
         "evpn.multihoming/*.{yml,yaml}",
         "gateway/*.{yml,yaml}",
         "isis/*.{yml,yaml}",
+        "mpls/*.{yml,yaml}",
         "ospf/*/*.{yml,yaml}",
         "vlan/*.{yml,yaml}",
         "vxlan/*.{yml,yaml}"

@@ -438,6 +438,11 @@ button { border:0; border-radius:9px; background:var(--green); color:#042f2e; pa
 /* Hundreds of animated SVG blur filters dominate dense-fabric rendering. */
 .dense-topology .vlan-link.active line { filter:none; animation:none; transition:stroke-opacity .35s, stroke-width .35s; }
 .dense-topology .link.active .line, .dense-topology .link.active .line i { animation:none; box-shadow:none; }
+/* SVG blur surfaces can be much larger than the visible line on phones. */
+@media (max-width: 640px) {
+  .vlan-link.active line { filter:none; animation:none; transition:stroke-opacity .35s, stroke-width .35s; }
+  .link.active .line, .link.active .line i { animation:none; box-shadow:none; }
+}
 /* Avoid renumbering the retained log on every eviction; skip offscreen rows. */
 .console { list-style:none; padding-left:18px; }
 .console li { content-visibility:auto; contain-intrinsic-size:auto 20px; }
