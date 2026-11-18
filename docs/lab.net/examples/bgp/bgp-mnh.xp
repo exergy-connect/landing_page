@@ -34,6 +34,8 @@ instructions: |
 
   A single flow stays on one exit; 10/20/30/40 percent describes aggregate
   traffic over many independent flows. Reverse traffic follows ordinary BGP.
+  Both directions use static MPLS transport across the core, including return
+  traffic to an ingress loopback learned through the IGP.
   Static MPLS labels are 16000 + node id; this example does not run LDP.
   The IPv4 lab MNH profile uses experimental attribute code 254. For native
   Linux deployment, use updated controller/dataplane assets and load the host's

@@ -1,16 +1,16 @@
 {
   "name": "exergy-lab.net-wasm",
-  "version": "1.0.1+20261117T135533Z.77d313b24e2e",
-  "builtAt": "2026-11-17T13:55:33Z",
-  "gitCommit": "77d313b24e2e44c7e35dc5578b90c119ad770a02",
+  "version": "1.0.1+20261118T070124Z.38157820e36c",
+  "builtAt": "2026-11-18T07:01:24Z",
+  "gitCommit": "38157820e36c729086731bef1404c978b6e74343",
   "files": {
     "exergy-lab.net.js": {
-      "sha256": "094eb9a269e8131f1808330e6e5c5525ffbb771dcc237f3c8dec71d996ac86d6",
-      "bytes": 19046
+      "sha256": "7719bf99c92df3502d4f68caaca5679d032f7bfe16be961ccc63de1789394c06",
+      "bytes": 19718
     },
     "exergy-lab.net.wasm": {
-      "sha256": "1ee53b4b268cda553a601eb9972046733b0748a516f1c5a99de0054e0cd35744",
-      "bytes": 109000
+      "sha256": "21d7a65073a08c4635f5d1d86095184f863433027c82eb8297222eb0690b2cd6",
+      "bytes": 119725
     }
   }
 }
