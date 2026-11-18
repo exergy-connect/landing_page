@@ -22,7 +22,57 @@ topology:
     r2:
       bgp:
         as: 65002
-  links: [r1-r2]
+  links:
+    - interfaces:
+        - node: r1
+        - node: r2
+```
+
+Define every link with an explicit `interfaces` list, with one `node` entry for each endpoint. Each node must be declared under `nodes`. In particular, node names may contain hyphens: never join two such names into a string like `onprem-east-dx-edge-east`. The string shorthand splits on every hyphen and would interpret that as five node names. Use:
+
+```yaml
+nodes:
+  onprem-east: {}
+  dx-edge-east: {}
+  tgw-east: {}
+links:
+  - interfaces:
+      - node: onprem-east
+      - node: dx-edge-east
+  - interfaces:
+      - node: dx-edge-east
+      - node: tgw-east
+```
+
+Place `nodes` and `links` inside `topology` as in the complete example above. Specify exactly two endpoints per point-to-point link.
+
+## Explain the lab
+
+Include a top-level `instructions` field as a YAML block scalar alongside `topology`. It appears under **Lab instructions** in the notebook and is retained in share links. Write plain text: the notebook displays it as text, not rendered Markdown.
+
+Explain the scenario and what the lab demonstrates, then give concrete steps to launch and explore it. Identify the nodes, routes, sessions, or packets to inspect and describe the expected behavior. Suggest a small change and what the user should observe after editing and launching again. Keep the explanation consistent with the actual topology and validation steps; do not claim that an untested result has been verified.
+
+```yaml
+title: Two BGP routers
+instructions: |
+  This lab shows two routers establishing an eBGP session.
+
+  Launch the lab and wait for the session between r1 and r2 to establish.
+  Inspect each router's BGP sessions and routes. Try disabling the link and
+  observe the session state, then restore it and watch the session recover.
+topology:
+  name: two-router
+  device: frr
+  module: [bgp]
+  nodes:
+    r1:
+      bgp: { as: 65001 }
+    r2:
+      bgp: { as: 65002 }
+  links:
+    - interfaces:
+        - node: r1
+        - node: r2
 ```
 
 To create a self-contained link, gzip the exact UTF-8 YAML bytes, encode them as URL-safe Base64, remove trailing `=` padding, and put the result in the `lab` fragment parameter:
